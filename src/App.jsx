@@ -578,6 +578,46 @@ export default function App() {
     };
   }, [reports, inventoryTotals]);
 
+  // 일 평균 사용량 (26년 5월 1일 기준)
+  const averagesSinceMay2026 = useMemo(() => {
+    const targetReports = reports.filter(r => r.date >= '2026-05-01');
+    const uniqueDays = new Set(targetReports.map(r => r.date)).size;
+    if (uniqueDays === 0) return { rice: 0, tie: 0, bag: 0 };
+
+    let totalRice = 0;
+    let totalSales = 0;
+    targetReports.forEach(r => {
+      totalRice += Number(r.inventory?.usedRice || 0);
+      totalSales += Number(r.totalSales || 0);
+    });
+
+    const totalTieAndBag = Math.floor(totalSales / 5000);
+
+    return {
+      rice: (totalRice / uniqueDays).toFixed(1),
+      tie: Math.round(totalTieAndBag / uniqueDays),
+      bag: Math.round(totalTieAndBag / uniqueDays)
+    };
+  }, [reports]);
+
+  // 이번 달 남은 실제 영업 일수
+  const remainingDaysThisMonth = useMemo(() => {
+    const todayStr = getTodayString();
+    const todayDate = new Date(todayStr);
+    const year = todayDate.getFullYear();
+    const month = todayDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    let count = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      if (dStr >= todayStr && !holidays.includes(dStr)) {
+        count++;
+      }
+    }
+    return count;
+  }, [holidays]);
+
   const dailyStatus = useMemo(() => {
     const today = formData.date;
     return {
@@ -655,7 +695,7 @@ export default function App() {
     return result;
   }, [reports, filterType, filterValue]);
 
-  // 스케쥴 및 급여 통합 계산 로직 (4대보험 및 식대 포함) - 업데이트된 기준 반영
+  // 스케쥴 및 급여 통합 계산 로직 (4대보험 및 식대 포함)
   const scheduleStats = useMemo(() => {
     const year = calendarDate.getFullYear();
     const month = calendarDate.getMonth();
@@ -697,9 +737,7 @@ export default function App() {
     Object.values(managerMonthlyStats).forEach(stats => {
       stats.totalHours = stats.totalDays * 10;
       
-      // 한 주라도 2일 이상(20시간) 근무한 적이 있는지 여부
       stats.isOver15hPerWeek = Object.values(stats.weeklyDays).some(c => c >= 2);
-      // 월 전체 60시간(6일) 이상 근무 여부
       stats.isOver60hPerMonth = stats.totalHours >= 60;
 
       if (stats.isOver15hPerWeek || stats.isOver60hPerMonth) {
@@ -1253,33 +1291,37 @@ export default function App() {
 
                  <div className="bg-white p-8 rounded-[48px] border-4 border-gray-900 shadow-2xl space-y-6">
                     <h3 className="text-xl font-black text-gray-900 border-l-8 border-rose-600 pl-4 py-1">현재 재고 현황</h3>
-                    <p className="text-[10px] text-gray-400">* 빵끈과 포장비닐은 누적 매출 5,000원당 1개씩 자동 차감됩니다.</p>
+                    <p className="text-[10px] text-gray-400">* 빵끈과 포장비닐은 누적 매출 5,000원당 1개씩 자동 차감되며, 평균은 26년 5월부터 집계됩니다.</p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                        <div className="bg-amber-50 p-6 rounded-3xl border-4 border-amber-200 flex flex-col items-center justify-center space-y-2 shadow-sm">
                           <Box className="text-amber-500 mb-1" size={36}/>
                           <span className="text-xs font-black text-amber-500 uppercase tracking-widest">뻥쌀 재고</span>
                           <span className="text-4xl font-black text-amber-700 tracking-tight">{currentStock.riceKg.toLocaleString()}<span className="text-lg">kg</span></span>
                           <span className="text-sm font-black text-amber-600">약 {(currentStock.riceKg / 20).toFixed(1)}박스</span>
-                          <div className="w-full border-t-2 border-amber-200 mt-2 pt-2 text-center">
-                             <span className="text-xs text-amber-600">자산 가치: {(currentStock.riceKg * 2500).toLocaleString()}원</span>
+                          <span className="text-[10px] text-amber-500/80 bg-amber-100 px-3 py-1 rounded-full mt-1">일 평균 {averagesSinceMay2026.rice}kg 사용</span>
+                          <div className="w-full border-t-2 border-amber-200 mt-3 pt-3 text-center flex flex-col gap-1">
+                             <span className="text-[10px] text-amber-600 font-bold uppercase tracking-tighter">이번 달 남은 영업일({remainingDaysThisMonth}일) 필요량</span>
+                             <span className="text-sm font-black text-amber-700">{(averagesSinceMay2026.rice * remainingDaysThisMonth).toFixed(1)}kg <span className="text-xs">(약 {((averagesSinceMay2026.rice * remainingDaysThisMonth)/20).toFixed(1)}박스)</span></span>
                           </div>
                        </div>
                        <div className="bg-blue-50 p-6 rounded-3xl border-4 border-blue-200 flex flex-col items-center justify-center space-y-2 shadow-sm">
                           <Package className="text-blue-500 mb-1" size={36}/>
                           <span className="text-xs font-black text-blue-500 uppercase tracking-widest">빵끈 재고</span>
                           <span className="text-4xl font-black text-blue-700 tracking-tight">{currentStock.tie.toLocaleString()}<span className="text-lg">개</span></span>
-                          <span className="text-sm font-black text-blue-50/0 select-none">-</span>
-                          <div className="w-full border-t-2 border-blue-200 mt-2 pt-2 text-center">
-                             <span className="text-xs text-blue-600">자산 가치: {(currentStock.tie * 5).toLocaleString()}원</span>
+                          <span className="text-[10px] text-blue-500/80 bg-blue-100 px-3 py-1 rounded-full mt-1">일 평균 {averagesSinceMay2026.tie}개 사용</span>
+                          <div className="w-full border-t-2 border-blue-200 mt-3 pt-3 text-center flex flex-col gap-1">
+                             <span className="text-[10px] text-blue-600 font-bold uppercase tracking-tighter">이번 달 남은 영업일({remainingDaysThisMonth}일) 필요량</span>
+                             <span className="text-sm font-black text-blue-700">{(averagesSinceMay2026.tie * remainingDaysThisMonth).toLocaleString()}개</span>
                           </div>
                        </div>
                        <div className="bg-rose-50 p-6 rounded-3xl border-4 border-rose-200 flex flex-col items-center justify-center space-y-2 shadow-sm">
                           <ShoppingCart className="text-rose-500 mb-1" size={36}/>
                           <span className="text-xs font-black text-rose-500 uppercase tracking-widest">포장 비닐 재고</span>
                           <span className="text-4xl font-black text-rose-700 tracking-tight">{currentStock.bag.toLocaleString()}<span className="text-lg">개</span></span>
-                          <span className="text-sm font-black text-rose-50/0 select-none">-</span>
-                          <div className="w-full border-t-2 border-rose-200 mt-2 pt-2 text-center">
-                             <span className="text-xs text-rose-600">자산 가치: {(currentStock.bag * 40).toLocaleString()}원</span>
+                          <span className="text-[10px] text-rose-500/80 bg-rose-100 px-3 py-1 rounded-full mt-1">일 평균 {averagesSinceMay2026.bag}개 사용</span>
+                          <div className="w-full border-t-2 border-rose-200 mt-3 pt-3 text-center flex flex-col gap-1">
+                             <span className="text-[10px] text-rose-600 font-bold uppercase tracking-tighter">이번 달 남은 영업일({remainingDaysThisMonth}일) 필요량</span>
+                             <span className="text-sm font-black text-rose-700">{(averagesSinceMay2026.bag * remainingDaysThisMonth).toLocaleString()}개</span>
                           </div>
                        </div>
                     </div>
@@ -1537,6 +1579,11 @@ export default function App() {
                     className="w-full p-4 bg-gray-100 rounded-2xl border-none outline-none font-black text-right text-gray-900 text-xl shadow-inner focus:ring-4 ring-blue-200"
                     placeholder="0 원"
                   />
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => setScheduleWage('120000')} className="flex-1 py-3 bg-gray-50 hover:bg-gray-200 border-2 border-gray-200 rounded-xl text-sm font-black text-gray-600 transition-colors">12만원</button>
+                    <button onClick={() => setScheduleWage('130000')} className="flex-1 py-3 bg-gray-50 hover:bg-gray-200 border-2 border-gray-200 rounded-xl text-sm font-black text-gray-600 transition-colors">13만원</button>
+                    <button onClick={() => setScheduleWage('140000')} className="flex-1 py-3 bg-gray-50 hover:bg-gray-200 border-2 border-gray-200 rounded-xl text-sm font-black text-gray-600 transition-colors">14만원</button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 mb-6">
