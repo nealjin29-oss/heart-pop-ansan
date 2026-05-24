@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Camera, CheckCircle2, Circle, MapPin, Calendar, DollarSign, AlertCircle, FileText, User, Lock, Download, Image as ImageIcon, BarChart3, Users, LogOut, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, CalendarDays, List, HelpCircle, Edit2, Trash2, Save, Maximize2, Loader2, FileSpreadsheet, TrendingUp, Menu, MessageSquare, BookOpen, Clock, Power, Key, Thermometer, Droplets, Wind, Package, Trash, Shirt, Box, Play, Layers, PiggyBank, CreditCard, Coins, ShoppingCart, Percent, UserPlus, UserMinus, PlusCircle, MinusCircle, History } from 'lucide-react';
+import { Camera, CheckCircle2, Circle, MapPin, Calendar, DollarSign, AlertCircle, FileText, User, Lock, Download, Image as ImageIcon, BarChart3, Users, LogOut, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, CalendarDays, List, HelpCircle, Edit2, Trash2, Save, Maximize2, Loader2, FileSpreadsheet, TrendingUp, Menu, MessageSquare, BookOpen, Clock, Power, Key, Thermometer, Droplets, Wind, Package, Trash, Shirt, Box, Play, Layers, PiggyBank, CreditCard, Coins, ShoppingCart, Percent, UserPlus, UserMinus, PlusCircle, MinusCircle, History, Wallet, Plus, PieChart } from 'lucide-react';
 
 // === Firebase Database Integration ===
 import { initializeApp } from 'firebase/app';
@@ -40,6 +40,12 @@ const parseComma = (val) => {
 // 고정 매니저 리스트
 const managerList = ['정윤이', '황진웅', '최윤미', '장유미', '윤종규'];
 
+// 비용 카테고리 리스트
+const COST_CATEGORIES = [
+  '재료', '급여', '소모품', '비품', '장비 구입', '보험료', '식비', 
+  '임차료', '교통비', '차량유지비', '배송비(우편 및 용달)', '기타'
+];
+
 // 매니저별 은은한 배경색 리스트
 const managerColorMap = {
   '정윤이': 'bg-rose-100 text-rose-700 border-rose-200',
@@ -64,11 +70,6 @@ const getManagerColor = (name) => {
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash += name.charCodeAt(i);
   return dynamicColors[hash % dynamicColors.length];
-};
-
-const checklistNames = {
-  readyCash: '영업준비금 10만원 확인',
-  changeEnough: '5천원권 충분'
 };
 
 const photoNames = {
@@ -136,6 +137,7 @@ export default function App() {
   const [schedules, setSchedules] = useState({});
   const [dbManagers, setDbManagers] = useState([]); 
   const [deletedDefaults, setDeletedDefaults] = useState([]); 
+  const [costs, setCosts] = useState([]);
   
   // 재고 관리 상태 
   const [inventoryLogs, setInventoryLogs] = useState([]);
@@ -166,6 +168,10 @@ export default function App() {
   const [customScheduleWorker, setCustomScheduleWorker] = useState('');
   const [newManagerName, setNewManagerName] = useState('');
   
+  // 비용 관리 폼 상태
+  const [costSelectionDate, setCostSelectionDate] = useState(null);
+  const [costForm, setCostForm] = useState({ category: '재료', amount: '', description: '' });
+
   // Q&A 폼용 상태
   const [qnaQuestion, setQnaQuestion] = useState('');
   const [qnaAuthor, setQnaAuthor] = useState('정윤이');
@@ -180,8 +186,7 @@ export default function App() {
     date: getTodayString(), 
     worker: '정윤이',
     customWorker: '',
-    sales: { cash: '', card: '' },
-    checklist: { readyCash: false, changeEnough: false },
+    sales: { cash: '', card: '', finalPos: '' },
     inventory: { 
       stockCount: '', 
       usedRice: '', 
@@ -247,6 +252,7 @@ export default function App() {
     const managersRef = collection(db, 'artifacts', appId, 'public', 'data', 'managers');
     const inventoryLogsRef = collection(db, 'artifacts', appId, 'public', 'data', 'inventoryLogs');
     const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'managerSettings');
+    const costsRef = collection(db, 'artifacts', appId, 'public', 'data', 'costs');
     
     const unsubReports = onSnapshot(reportsRef, (snapshot) => {
       const fetched = [];
@@ -299,14 +305,16 @@ export default function App() {
       }
     }, (err) => console.error(err));
 
-    return () => { unsubReports(); unsubQna(); unsubHolidays(); unsubSchedules(); unsubManagers(); unsubInventoryLogs(); unsubSettings(); };
+    const unsubCosts = onSnapshot(costsRef, (snapshot) => {
+      const fetched = [];
+      snapshot.forEach(doc => fetched.push({ id: doc.id, ...doc.data() }));
+      setCosts(fetched);
+    }, (err) => console.error(err));
+
+    return () => { unsubReports(); unsubQna(); unsubHolidays(); unsubSchedules(); unsubManagers(); unsubInventoryLogs(); unsubSettings(); unsubCosts(); };
   }, [user]);
 
   // --- Handlers ---
-  const handleChecklist = (key) => {
-    setFormData(prev => ({ ...prev, checklist: { ...prev.checklist, [key]: !prev.checklist[key] } }));
-  };
-
   const handleWaitingToggle = (val) => {
     setFormData(prev => ({
       ...prev,
@@ -349,6 +357,7 @@ export default function App() {
     
     const cashVal = Number(parseComma(formData.sales.cash)) || 0;
     const cardVal = Number(parseComma(formData.sales.card)) || 0;
+    const finalPosVal = Number(parseComma(formData.sales.finalPos)) || 0;
     const total = cashVal + cardVal;
     const finalWorker = formData.worker;
 
@@ -356,7 +365,7 @@ export default function App() {
       await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'reports', Date.now().toString()), {
         ...formData, 
         worker: finalWorker,
-        sales: { cash: cashVal, card: cardVal },
+        sales: { cash: cashVal, card: cardVal, finalPos: finalPosVal },
         totalSales: total, 
         timestamp: new Date().toISOString()
       });
@@ -424,6 +433,7 @@ export default function App() {
       let col = 'reports';
       if (view === 'qna') col = 'qna';
       if (adminViewMode === 'inventory' && view === 'admin') col = 'inventoryLogs';
+      if (adminViewMode === 'cost' && view === 'admin') col = 'costs';
 
       await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', col, id));
       setDeleteConfirmId(null);
@@ -439,10 +449,11 @@ export default function App() {
     if (!user || !editData) return;
     const cashVal = Number(parseComma(editData.sales.cash)) || 0;
     const cardVal = Number(parseComma(editData.sales.card)) || 0;
+    const finalPosVal = Number(parseComma(editData.sales.finalPos)) || 0;
     const total = cashVal + cardVal;
     
     const id = editData.id;
-    const updated = { ...editData, sales: { cash: cashVal, card: cardVal }, totalSales: total };
+    const updated = { ...editData, sales: { cash: cashVal, card: cardVal, finalPos: finalPosVal }, totalSales: total };
     delete updated.id;
     try {
       await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'reports', id), updated);
@@ -530,6 +541,21 @@ export default function App() {
     }
   };
 
+  // --- Cost Handler ---
+  const handleAddCost = async () => {
+    if (!costForm.amount || !costForm.description || !user) return;
+    try {
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'costs'), {
+        date: costSelectionDate,
+        category: costForm.category,
+        amount: Number(parseComma(costForm.amount)),
+        description: costForm.description,
+        timestamp: new Date().toISOString()
+      });
+      setCostForm({ category: '재료', amount: '', description: '' });
+    } catch(e) { setAlertMessage("비용 등록 실패: " + e.message); }
+  };
+
   // --- Statistics & Inventory Calculations ---
   const inventoryTotals = useMemo(() => {
     let rice = 0, tie = 0, bag = 0, totalSpent = 0;
@@ -600,7 +626,7 @@ export default function App() {
     };
   }, [reports]);
 
-  // 이번 달 남은 실제 영업 일수
+  // 이번 달 남은 영업일 계산: 집계달력 기준 이번 달 남은 일수 - 휴무일 - 상/하 마감 제출일 제외
   const remainingDaysThisMonth = useMemo(() => {
     const todayStr = getTodayString();
     const todayDate = new Date(todayStr);
@@ -611,12 +637,18 @@ export default function App() {
     let count = 0;
     for (let d = 1; d <= daysInMonth; d++) {
       const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      // 오늘 포함, 남은 일자 계산
       if (dStr >= todayStr && !holidays.includes(dStr)) {
-        count++;
+        const hasSang = reports.some(r => r.date === dStr && r.location === '상행선');
+        const hasHa = reports.some(r => r.date === dStr && r.location === '하행선');
+        // 상행선, 하행선 모두 제출된 날이면 필요량 계산에서 제외
+        if (!(hasSang && hasHa)) {
+          count++;
+        }
       }
     }
     return count;
-  }, [holidays]);
+  }, [holidays, reports]);
 
   const dailyStatus = useMemo(() => {
     const today = formData.date;
@@ -700,6 +732,7 @@ export default function App() {
     const year = calendarDate.getFullYear();
     const month = calendarDate.getMonth();
     const managerMonthlyStats = {};
+    const dailyLaborCosts = {};
     let grandTotalWage = 0;
     let grandTotalMeal = 0;
     let grandTotalInsurance = 0;
@@ -757,6 +790,22 @@ export default function App() {
       grandTotalInsurance += stats.totalInsurance;
     });
 
+    // 일별 인건비 합산 (달력 및 비용관리 탭용)
+    Object.entries(schedules).forEach(([key, data]) => {
+      const [dateStr, loc] = key.split('_');
+      const d = new Date(dateStr);
+      if (d.getFullYear() === year && d.getMonth() === month && !holidays.includes(dateStr)) {
+         const stats = managerMonthlyStats[data.manager];
+         if (stats) {
+            const wage = data.wage || 0;
+            const insurance = Math.round(wage * stats.insuranceRate);
+            const dailyCost = wage + MEAL_ALLOWANCE + insurance;
+            if (!dailyLaborCosts[dateStr]) dailyLaborCosts[dateStr] = 0;
+            dailyLaborCosts[dateStr] += dailyCost;
+         }
+      }
+    });
+
     return {
       managerMonthlyStats,
       grandTotalWage,
@@ -765,9 +814,58 @@ export default function App() {
       grandTotalLaborCost: grandTotalWage + grandTotalMeal + grandTotalInsurance,
       FULL_INSURANCE_RATE,
       PARTIAL_INSURANCE_RATE,
-      MEAL_ALLOWANCE
+      MEAL_ALLOWANCE,
+      dailyLaborCosts
     };
   }, [schedules, calendarDate, holidays]);
+
+  // 비용 관리 통계 계산 (수동 입력 + 자동 연동 인건비)
+  const monthlyCosts = useMemo(() => {
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+    let totalManual = 0;
+    let manualByDate = {};
+    
+    let categoryTotals = {
+      '급여': scheduleStats.grandTotalWage || 0,
+      '식비': scheduleStats.grandTotalMeal || 0,
+      '보험료': scheduleStats.grandTotalInsurance || 0
+    };
+    COST_CATEGORIES.forEach(c => { if (categoryTotals[c] === undefined) categoryTotals[c] = 0; });
+
+    costs.forEach(c => {
+       const d = new Date(c.date);
+       if (d.getFullYear() === year && d.getMonth() === month) {
+           const amt = Number(c.amount) || 0;
+           totalManual += amt;
+           if (!manualByDate[c.date]) manualByDate[c.date] = [];
+           manualByDate[c.date].push(c);
+           
+           if (categoryTotals[c.category] !== undefined) {
+               categoryTotals[c.category] += amt;
+           } else {
+               categoryTotals['기타'] += amt;
+           }
+       }
+    });
+
+    const totalLabor = scheduleStats.grandTotalLaborCost || 0;
+    const grandTotal = totalManual + totalLabor;
+    const sales = monthlyStats.total || 0;
+    const costPercentage = sales > 0 ? ((grandTotal / sales) * 100).toFixed(1) : 0;
+
+    const categoryBreakdown = Object.entries(categoryTotals)
+      .filter(([_, amt]) => amt > 0)
+      .map(([cat, amt]) => ({
+        category: cat,
+        amount: amt,
+        percentage: grandTotal > 0 ? ((amt / grandTotal) * 100).toFixed(1) : 0
+      }))
+      .sort((a, b) => b.amount - a.amount);
+
+    return { totalManual, manualByDate, grandTotal, costPercentage, totalLabor, categoryBreakdown };
+  }, [costs, scheduleStats, calendarDate, monthlyStats]);
+
 
   const downloadCSV = () => {
     const headers = ['일자', '위치', '매니저', '총매출', '현금', '카드', '사용한쌀(kg)', '로스(kg)', '재고(개)', '특이사항'];
@@ -856,6 +954,43 @@ export default function App() {
               {assignedWage > 0 && <span className="text-[7px] border-t border-black/10 pt-[1px] mt-[1px] opacity-80">{formatComma(assignedWage)}원</span>}
             </div>
           )}
+        </div>
+      );
+    }
+    return days;
+  };
+
+  const renderCostCalendar = () => {
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+    const days = [];
+    for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-cost-${i}`} className="p-2"></div>);
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isHoliday = holidays.includes(dStr);
+      const isToday = dStr === getTodayString();
+      const manualList = monthlyCosts.manualByDate[dStr] || [];
+      const manualSum = manualList.reduce((acc, c) => acc + Number(c.amount), 0);
+      const laborSum = scheduleStats.dailyLaborCosts[dStr] || 0;
+      const totalDaily = manualSum + laborSum;
+      
+      days.push(
+        <div 
+          key={d} 
+          onClick={() => setCostSelectionDate(dStr)}
+          className={`p-1.5 border min-h-[90px] flex flex-col rounded-lg transition-all ${isToday ? 'border-rose-500 border-2 bg-rose-50' : 'border-gray-200 bg-white'} cursor-pointer hover:border-gray-900 active:scale-95`}
+        >
+          <div className="flex justify-between items-start">
+             <span className={`text-xs font-black ${isToday ? 'text-rose-600' : isHoliday ? 'text-gray-300' : 'text-gray-500'}`}>{d}</span>
+             {isHoliday && <span className="text-[8px] font-black text-gray-400 bg-gray-100 px-1 rounded uppercase tracking-tighter">휴무</span>}
+          </div>
+          <div className="mt-auto space-y-[2px] pt-1">
+             {laborSum > 0 && <div className="text-[8px] font-black bg-blue-50 text-blue-600 rounded px-1 flex justify-between"><span>급/식/보</span><span>{formatComma(laborSum)}</span></div>}
+             {manualSum > 0 && <div className="text-[8px] font-black bg-orange-50 text-orange-600 rounded px-1 flex justify-between"><span>기타비용</span><span>{formatComma(manualSum)}</span></div>}
+             {(laborSum > 0 || manualSum > 0) && <div className="text-[9px] font-black text-right border-t border-gray-200 mt-[2px] pt-[2px] text-gray-900">{formatComma(totalDaily)}원</div>}
+          </div>
         </div>
       );
     }
@@ -957,7 +1092,6 @@ export default function App() {
                  </div>
               </div>
               
-              {/* 기대 매출 및 로스/시식 환산액 */}
               <div className="grid grid-cols-2 gap-4 pt-4 border-t-2 border-dashed border-gray-100">
                  <div className="bg-purple-50 p-5 rounded-3xl border-2 border-purple-200 shadow-sm">
                     <h4 className="text-[10px] font-black text-purple-400 mb-1 uppercase tracking-tighter">기대 매출 (쌀 기준)</h4>
@@ -970,11 +1104,12 @@ export default function App() {
               </div>
             </div>
 
-            <div className="flex flex-wrap bg-gray-100 p-2 rounded-[32px] border-2 border-gray-200 font-black">
-              <button onClick={()=>setAdminViewMode('calendar')} className={`flex-1 min-w-[80px] py-4 rounded-2xl text-sm font-black transition-all ${adminViewMode==='calendar'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>집계 달력</button>
-              <button onClick={()=>setAdminViewMode('list')} className={`flex-1 min-w-[80px] py-4 rounded-2xl text-sm font-black transition-all ${adminViewMode==='list'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>리포트 목록</button>
-              <button onClick={()=>setAdminViewMode('labor')} className={`flex-1 min-w-[80px] py-4 rounded-2xl text-sm font-black transition-all ${adminViewMode==='labor'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>근로/급여</button>
-              <button onClick={()=>setAdminViewMode('inventory')} className={`flex-1 min-w-[80px] py-4 rounded-2xl text-sm font-black transition-all ${adminViewMode==='inventory'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>재고 관리</button>
+            <div className="flex flex-wrap bg-gray-100 p-2 rounded-[32px] border-2 border-gray-200 font-black gap-2">
+              <button onClick={()=>setAdminViewMode('calendar')} className={`flex-1 min-w-[60px] py-4 rounded-2xl text-[13px] font-black transition-all ${adminViewMode==='calendar'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>집계 달력</button>
+              <button onClick={()=>setAdminViewMode('list')} className={`flex-1 min-w-[60px] py-4 rounded-2xl text-[13px] font-black transition-all ${adminViewMode==='list'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>리포트 목록</button>
+              <button onClick={()=>setAdminViewMode('labor')} className={`flex-1 min-w-[60px] py-4 rounded-2xl text-[13px] font-black transition-all ${adminViewMode==='labor'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>근로/급여</button>
+              <button onClick={()=>setAdminViewMode('inventory')} className={`flex-1 min-w-[60px] py-4 rounded-2xl text-[13px] font-black transition-all ${adminViewMode==='inventory'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>재고 관리</button>
+              <button onClick={()=>setAdminViewMode('cost')} className={`flex-1 min-w-[60px] py-4 rounded-2xl text-[13px] font-black transition-all ${adminViewMode==='cost'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>비용 관리</button>
             </div>
 
             {adminViewMode === 'calendar' && (
@@ -1027,7 +1162,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* 일 평균 매출 및 목표 대비 과부족 */}
                   <div className="mt-4 grid grid-cols-2 gap-4 font-black">
                     <div className="bg-teal-50 p-6 rounded-3xl border-2 border-teal-100 flex flex-col items-center">
                        <span className="text-[10px] font-black text-teal-400 mb-1 uppercase tracking-widest">일 평균 매출</span>
@@ -1043,7 +1177,6 @@ export default function App() {
 
                 </div>
 
-                {/* 시스템 전체 통계 */}
                 <div className="bg-white p-10 rounded-[56px] border-4 border-gray-900 shadow-2xl space-y-12">
                    <div className="text-center space-y-4">
                       <div className="inline-flex items-center gap-3 bg-rose-50 text-rose-600 px-6 py-2 rounded-full border border-rose-200 font-black text-sm uppercase tracking-widest font-black"><TrendingUp size={18}/> 시스템 전체 기간 매출 통계</div>
@@ -1093,9 +1226,78 @@ export default function App() {
               </div>
             )}
 
+            {adminViewMode === 'cost' && (
+              <div className="space-y-6 font-black">
+                 <div className="bg-white p-6 rounded-[40px] border-4 border-gray-900 shadow-xl animate-in fade-in">
+                    <div className="flex justify-between items-center mb-8 px-4">
+                       <button onClick={()=>setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth()-1, 1))} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200"><ChevronLeft size={28} className="text-gray-900"/></button>
+                       <span className="font-black text-3xl text-gray-900">{calendarDate.getFullYear()}년 {calendarDate.getMonth()+1}월</span>
+                       <button onClick={()=>setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth()+1, 1))} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200"><ChevronRight size={28} className="text-gray-900"/></button>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 text-center mb-3 text-[12px] font-black text-gray-400 uppercase tracking-widest">
+                       {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=><div key={d}>{d}</div>)}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">{renderCostCalendar()}</div>
+                 </div>
+
+                 {/* 월 총 비용 대시보드 (인건비 + 수동비용 통합) */}
+                 <div className="bg-gray-900 p-8 rounded-[40px] text-white shadow-xl flex flex-col items-center justify-center space-y-4 border-4 border-gray-800 animate-in slide-in-from-bottom-4">
+                    <div className="flex items-center gap-2 bg-gray-800 px-4 py-1.5 rounded-full border border-gray-700">
+                       <Wallet size={16} className="text-rose-400"/>
+                       <span className="text-[10px] text-gray-300 uppercase tracking-widest">이번 달 총 발생 비용</span>
+                    </div>
+                    <div className="text-center flex flex-col md:flex-row items-center gap-3">
+                       <span className="text-5xl font-black tracking-tight">{monthlyCosts.grandTotal.toLocaleString()}원</span>
+                       <span className="text-2xl font-black text-rose-400 tracking-tighter bg-rose-500/10 px-3 py-1 rounded-xl">(매출 대비 {monthlyCosts.costPercentage}%)</span>
+                    </div>
+                    <div className="w-full grid grid-cols-2 gap-4 mt-6 border-t-2 border-gray-700 pt-6">
+                       <div className="flex flex-col items-center space-y-1">
+                          <span className="text-[10px] text-gray-400 uppercase">근로/급여 합계 (자동 연동)</span>
+                          <span className="text-xl font-black text-blue-300">{monthlyCosts.totalLabor.toLocaleString()}원</span>
+                       </div>
+                       <div className="flex flex-col items-center space-y-1 border-l-2 border-gray-700">
+                          <span className="text-[10px] text-gray-400 uppercase">기타 수동 비용 합계</span>
+                          <span className="text-xl font-black text-orange-300">{monthlyCosts.totalManual.toLocaleString()}원</span>
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* 비용 항목별 비교 분석 패널 */}
+                 <div className="bg-white p-8 rounded-[40px] border-4 border-gray-900 shadow-xl mt-8">
+                    <h3 className="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
+                      <div className="bg-rose-100 p-2 rounded-full"><PieChart className="text-rose-600" size={24}/></div>
+                      비용 항목별 비교 분석 <span className="text-sm font-bold text-gray-400 ml-2">(총 100% 기준)</span>
+                    </h3>
+                    <div className="space-y-5">
+                        {monthlyCosts.categoryBreakdown.map((item, idx) => (
+                            <div key={idx} className="flex flex-col gap-2">
+                                <div className="flex justify-between items-end text-sm font-black text-gray-700">
+                                    <span className="flex items-center gap-2">
+                                      <span className="w-3 h-3 rounded-full bg-gray-900 block"></span>
+                                      {item.category}
+                                    </span>
+                                    <div className="text-right">
+                                      <span className="text-lg font-black text-gray-900 block leading-none">{item.amount.toLocaleString()}원</span>
+                                      <span className="text-[10px] text-rose-600 uppercase font-black">{item.percentage}% 비중</span>
+                                    </div>
+                                </div>
+                                <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden border border-gray-200">
+                                    <div className="bg-gray-900 h-4 rounded-full transition-all duration-1000 ease-out" style={{ width: `${item.percentage}%` }}></div>
+                                </div>
+                            </div>
+                        ))}
+                        {monthlyCosts.categoryBreakdown.length === 0 && (
+                            <div className="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                              <p className="text-gray-400 font-black text-sm">이번 달에 발생한 비용 내역이 없습니다.</p>
+                            </div>
+                        )}
+                    </div>
+                 </div>
+              </div>
+            )}
+
             {adminViewMode === 'labor' && (
               <div className="space-y-6 animate-in fade-in font-black font-black">
-                 {/* 근로 기준 및 4대보험 안내 */}
                  <div className="bg-blue-50 p-6 rounded-[32px] border-2 border-blue-200 shadow-sm space-y-3 font-black">
                    <h4 className="text-blue-800 text-lg font-black flex items-center gap-2"><AlertCircle size={20}/> 근로 기준 및 4대보험 가입 안내</h4>
                    <ul className="text-xs text-blue-700 space-y-1.5 list-disc pl-5 leading-relaxed">
@@ -1106,7 +1308,6 @@ export default function App() {
                    </ul>
                  </div>
 
-                 {/* 매니저 이름 추가 및 삭제 패널 */}
                  <div className="bg-white p-8 rounded-[48px] border-4 border-gray-900 shadow-2xl space-y-6">
                     <h3 className="text-xl font-black text-gray-900 border-l-8 border-rose-600 pl-4 py-1">매니저 명단 관리</h3>
                     <div className="flex gap-3">
@@ -1122,7 +1323,6 @@ export default function App() {
                        </button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                       {/* 기본 매니저 렌더링 */}
                        {activeDefaults.map(m => (
                           <div key={m} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border-2 border-gray-100">
                              <div className="flex items-center gap-3">
@@ -1132,7 +1332,6 @@ export default function App() {
                              <button onClick={()=>handleRemoveDefaultManager(m)} className="p-2 text-gray-300 hover:text-red-500 transition-colors"><UserMinus size={18}/></button>
                           </div>
                        ))}
-                       {/* DB 추가 매니저 렌더링 */}
                        {dbManagers.map(m => (
                           <div key={m.id} className="flex justify-between items-center p-4 bg-white rounded-2xl border-2 border-gray-900 shadow-sm">
                              <div className="flex items-center gap-3">
@@ -1146,7 +1345,6 @@ export default function App() {
                     <p className="text-[10px] text-gray-400 italic text-center">* 여기서 추가된 이름은 업무보고 작성 폼과 스케쥴 배정 목록에 자동으로 나타납니다.</p>
                  </div>
 
-                 {/* 근무자 스케쥴 관리 패널 */}
                  <div className="bg-white p-10 rounded-[56px] border-4 border-gray-900 shadow-2xl space-y-10 mt-12">
                     <div className="text-center space-y-4 mb-4">
                        <div className="inline-flex items-center gap-3 bg-blue-50 text-blue-600 px-6 py-2 rounded-full border border-blue-200 font-black text-sm uppercase tracking-widest font-black"><CalendarDays size={18}/> 이번 달 근무자 스케쥴 관리</div>
@@ -1159,7 +1357,6 @@ export default function App() {
                       <button onClick={()=>setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth()+1, 1))} className="p-3 bg-white rounded-full hover:bg-gray-200 shadow-sm border-2 border-gray-200"><ChevronRight size={24}/></button>
                     </div>
 
-                    {/* 월 총 인건비 요약 대시보드 */}
                     <div className="bg-gray-900 p-8 rounded-[40px] text-white shadow-xl space-y-6 relative overflow-hidden mb-8 border-4 border-gray-800">
                       <div className="relative z-10 text-center space-y-2">
                         <p className="text-rose-400 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2">
@@ -1183,7 +1380,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* 상행선 스케쥴 */}
                     <div className="space-y-4">
                       <div className="flex items-center gap-2 border-l-8 border-red-600 pl-4 py-1">
                         <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">상행선 스케쥴</h2>
@@ -1196,7 +1392,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* 하행선 스케쥴 */}
                     <div className="space-y-4 mt-8">
                       <div className="flex items-center gap-2 border-l-8 border-blue-600 pl-4 py-1">
                         <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">하행선 스케쥴</h2>
@@ -1209,7 +1404,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* 통합 근무 스케쥴 및 급여 합산 */}
                     <div className="mt-12 space-y-4">
                       <div className="flex items-center gap-2 border-l-8 border-purple-600 pl-4 py-1">
                         <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">이번 달 통합 근무 일수 및 예상 급여 (인건비 합산)</h2>
@@ -1261,18 +1455,15 @@ export default function App() {
 
             {adminViewMode === 'inventory' && (
               <div className="space-y-6 animate-in fade-in font-black font-black">
-                 {/* 누적 지출 비용 현황 및 세부내역 */}
                  <div className="bg-emerald-600 p-8 rounded-[48px] border-4 border-emerald-800 shadow-2xl text-center space-y-3 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-6 opacity-20"><PiggyBank size={100} color="white"/></div>
                     
-                    {/* 전체 합산 */}
                     <div className="relative z-10 space-y-2 pt-2">
                        <p className="text-emerald-200 text-xs font-black uppercase tracking-widest">총 재고 지출 누적액</p>
                        <p className="text-5xl font-black text-white tracking-tight">{currentStock.totalSpent.toLocaleString()}<span className="text-2xl ml-1">원</span></p>
                        <p className="text-[10px] text-emerald-300">* 하단에 입력된 모든 입출고 내역 금액의 합산입니다.</p>
                     </div>
 
-                    {/* 품목별 지출 세부 내역 */}
                     <div className="grid grid-cols-3 gap-2 mt-8 pt-6 border-t-2 border-emerald-500/50 relative z-10">
                        <div className="flex flex-col items-center justify-center">
                           <span className="text-[10px] text-emerald-300 uppercase tracking-widest mb-1">뻥쌀 지출</span>
@@ -1354,7 +1545,6 @@ export default function App() {
                     </div>
                  </div>
 
-                 {/* 입출고 상세 내역 (히스토리) 리스트 */}
                  <div className="space-y-4 pt-6">
                     <div className="flex items-center gap-2 mb-4 px-2">
                        <History className="text-gray-900" size={24}/>
@@ -1469,7 +1659,11 @@ export default function App() {
                                  <input type="text" value={formatComma(editData.sales?.card || '')} onChange={e=>setEditData({...editData, sales:{...editData.sales, card:parseComma(e.target.value)}})} className="w-full p-3 bg-white rounded-xl border-none font-black text-gray-900 text-right font-black" />
                                </div>
                              </div>
-                             <div className="grid grid-cols-2 gap-4 font-black">
+                             <div className="space-y-1 font-black mt-2">
+                               <label className="text-[10px] text-gray-400 font-black">포스기 종료 전 마지막 매출</label>
+                               <input type="text" value={formatComma(editData.sales?.finalPos || '')} onChange={e=>setEditData({...editData, sales:{...editData.sales, finalPos:parseComma(e.target.value)}})} className="w-full p-3 bg-purple-50 rounded-xl border-none font-black text-purple-900 text-right font-black shadow-inner" placeholder="수치 입력" />
+                             </div>
+                             <div className="grid grid-cols-2 gap-4 font-black mt-4">
                                <div className="space-y-1 font-black">
                                  <label className="text-[10px] text-gray-400 font-black">사용한 쌀 (kg)</label>
                                  <input type="number" value={editData.inventory?.usedRice || ''} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, usedRice:e.target.value}})} className="w-full p-3 bg-white rounded-xl border-none font-black text-gray-900 text-right font-black" />
@@ -1479,7 +1673,7 @@ export default function App() {
                                  <input type="number" value={editData.inventory?.stockCount || ''} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, stockCount:e.target.value}})} className="w-full p-3 bg-white rounded-xl border-none font-black text-gray-900 text-right font-black" />
                                </div>
                              </div>
-                             <div className="space-y-1 font-black">
+                             <div className="space-y-1 font-black mt-4">
                                <label className="text-[10px] text-gray-400 font-black">특이사항</label>
                                <textarea value={editData.notes || ''} onChange={e=>setEditData({...editData, notes:e.target.value})} className="w-full p-3 bg-white rounded-xl border-none font-black text-gray-900 font-black" rows={3} />
                              </div>
@@ -1512,6 +1706,14 @@ export default function App() {
                                     <span className="text-xs text-gray-500 font-black">재고 수량</span>
                                     <span>{r.inventory?.stockCount || 0}개</span>
                                   </div>
+                                </div>
+                             </div>
+
+                             <div className="bg-purple-50 p-4 rounded-2xl border-2 border-purple-100 font-black mt-4">
+                                <p className="text-[10px] text-purple-400 mb-2 uppercase tracking-widest font-sans font-black">포스기 마감 정보</p>
+                                <div className="flex justify-between items-center text-purple-900 font-black">
+                                  <span className="text-xs text-purple-600">종료 전 마지막 매출</span>
+                                  <span>{Number(r.sales?.finalPos || 0).toLocaleString()}원</span>
                                 </div>
                              </div>
 
@@ -1558,7 +1760,7 @@ export default function App() {
             )}
           </div>
 
-          {/* 관리자 모드에서만 나타나는 스케쥴 배정 팝업 */}
+          {/* 관리자 모드에서만 나타나는 스케쥴 배정 모달 */}
           {view === 'admin' && scheduleSelection && (
             <div className="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-8 backdrop-blur-md animate-in fade-in duration-300">
               <div className="bg-white p-10 rounded-[56px] w-full max-w-sm border-[10px] border-gray-900 shadow-2xl animate-in zoom-in-95 font-black">
@@ -1597,6 +1799,62 @@ export default function App() {
                 <button onClick={() => assignWorkerToSchedule('CLEAR')} className="w-full py-5 bg-red-50 text-red-600 rounded-3xl font-black border-4 border-red-100 flex items-center justify-center gap-2 shadow-sm">
                   <Trash2 size={20}/> 배정 삭제
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* 관리자 모드 - 비용 관리 상세 모달 */}
+          {view === 'admin' && costSelectionDate && (
+            <div className="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-6 backdrop-blur-md animate-in fade-in duration-300">
+              <div className="bg-white p-8 rounded-[48px] w-full max-w-md border-[8px] border-gray-900 shadow-2xl animate-in zoom-in-95 font-black flex flex-col max-h-[90vh]">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-widest">비용 상세 등록 및 내역</p>
+                    <h3 className="text-2xl font-black text-gray-900">{costSelectionDate}</h3>
+                  </div>
+                  <button onClick={()=>setCostSelectionDate(null)} className="p-3 bg-gray-100 rounded-2xl"><X size={24}/></button>
+                </div>
+
+                <div className="overflow-y-auto pr-2 space-y-6">
+                   <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-100 flex justify-between items-center">
+                      <span className="text-xs font-black text-blue-800 flex items-center gap-2"><CalendarDays size={14}/> 자동 연동 인건비</span>
+                      <span className="text-lg font-black text-blue-700">{formatComma(scheduleStats.dailyLaborCosts[costSelectionDate] || 0)}원</span>
+                   </div>
+
+                   <div className="space-y-2">
+                      <h4 className="text-xs text-gray-400 uppercase tracking-widest pl-2">등록된 수동 비용 목록</h4>
+                      {(monthlyCosts.manualByDate[costSelectionDate] || []).length === 0 ? (
+                        <p className="text-xs text-gray-400 bg-gray-50 p-4 rounded-2xl text-center border-2 border-dashed border-gray-200">등록된 수동 비용이 없습니다.</p>
+                      ) : (
+                        (monthlyCosts.manualByDate[costSelectionDate] || []).map(c => (
+                           <div key={c.id} className="bg-white p-4 rounded-2xl border-2 border-gray-200 flex justify-between items-center shadow-sm">
+                              <div>
+                                <span className="text-[10px] bg-gray-100 px-2 py-1 rounded-md text-gray-600 mr-2 border border-gray-200">{c.category}</span>
+                                <span className="text-sm font-black text-gray-900">{c.description}</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-base font-black text-rose-600">{formatComma(c.amount)}원</span>
+                                <button onClick={()=>setDeleteConfirmId({id: c.id, col: 'costs'})} className="text-gray-300 hover:text-red-500"><Trash2 size={16}/></button>
+                              </div>
+                           </div>
+                        ))
+                      )}
+                   </div>
+
+                   <div className="bg-gray-50 p-5 rounded-3xl border-2 border-gray-200 space-y-3">
+                      <h4 className="text-xs text-gray-600 font-black mb-2 flex items-center gap-2"><Plus size={14}/> 새로운 비용 추가</h4>
+                      <div className="flex flex-col gap-2">
+                         <select value={costForm.category} onChange={e=>setCostForm({...costForm, category: e.target.value})} className="w-full p-4 bg-white rounded-xl border-none font-black text-sm text-gray-900 shadow-sm outline-none focus:ring-2 ring-gray-200">
+                            {COST_CATEGORIES.map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                         </select>
+                         <input type="text" value={formatComma(costForm.amount)} onChange={e=>setCostForm({...costForm, amount: parseComma(e.target.value)})} placeholder="금액 입력" className="w-full p-4 bg-white rounded-xl border-none font-black text-right text-gray-900 shadow-sm outline-none focus:ring-2 ring-gray-200 text-lg" />
+                      </div>
+                      <input type="text" value={costForm.description} onChange={e=>setCostForm({...costForm, description: e.target.value})} placeholder="비용 내용 설명 (예: 종량제 봉투 구매)" className="w-full p-4 bg-white rounded-xl border-none font-black text-sm text-gray-900 shadow-sm outline-none focus:ring-2 ring-gray-200" />
+                      <button onClick={handleAddCost} className="w-full py-4 bg-gray-900 text-white rounded-xl font-black mt-2 flex items-center justify-center gap-2 active:scale-95 transition-transform"><Plus size={18}/> 상세 비용 추가하기</button>
+                   </div>
+                </div>
               </div>
             </div>
           )}
@@ -1786,23 +2044,16 @@ export default function App() {
                 <span className="text-sm font-black">오늘 마감 합계</span>
                 <span className="text-xl font-black tracking-tight">{((Number(parseComma(formData.sales.cash))||0)+(Number(parseComma(formData.sales.card))||0)).toLocaleString()}원</span>
               </div>
+              <div className="space-y-1 mt-6">
+                <label className="text-[11px] text-gray-900 ml-1 uppercase font-sans font-black">포스기 종료 전 마지막 매출</label>
+                <input type="text" value={formatComma(formData.sales.finalPos)} onChange={e=>setFormData({...formData, sales:{...formData.sales, finalPos:parseComma(e.target.value)}})} className="w-full p-5 bg-purple-50 rounded-[28px] border-none outline-none font-black text-right text-purple-900 text-2xl shadow-inner focus:ring-4 ring-purple-200" placeholder="0" />
+                <p className="text-[10px] text-gray-400 ml-2 mt-1">* 위 합계 금액에는 포함되지 않으며, 관리자 보고용으로만 사용됩니다.</p>
+              </div>
             </div>
           </section>
 
           <section className="bg-white p-6 rounded-[44px] border-4 border-gray-900 shadow-2xl space-y-6 font-black font-black">
-            <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">2. 마감 체크리스트</h2>
-            <div className="grid grid-cols-1 gap-3 pt-2 font-black">
-              {Object.keys(checklistNames).map(k=>(
-                <button key={k} onClick={()=>handleChecklist(k)} className={`w-full flex justify-between py-5 px-7 items-center rounded-[28px] border-4 transition-all duration-200 transform active:scale-95 ${formData.checklist[k] ? 'bg-rose-50 border-rose-600 shadow-xl' : 'border-gray-50 bg-gray-50/50'}`}>
-                  <span className={`text-lg font-black transition-colors ${formData.checklist[k] ? 'text-rose-700' : 'text-gray-900'}`}>{checklistNames[k]}</span>
-                  {formData.checklist[k] ? <CheckCircle2 className="text-rose-600" size={32}/> : <Circle className="text-gray-200" size={32}/>}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="bg-white p-6 rounded-[44px] border-4 border-gray-900 shadow-2xl space-y-6 font-black font-black">
-            <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">3. 재료 및 재고 현황</h2>
+            <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">2. 재료 및 재고 현황</h2>
             <div className="grid grid-cols-3 gap-3 pt-2 font-black">
               <div className="space-y-1">
                 <label className="text-[10px] text-gray-900 ml-1 uppercase font-sans font-black">재고(개)</label>
@@ -1851,7 +2102,7 @@ export default function App() {
 
           <section className="bg-white p-6 rounded-[44px] border-4 border-gray-900 shadow-2xl space-y-6 font-black font-black font-black">
             <div className="flex justify-between items-center font-black">
-              <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">4. 증빙 사진 촬영 (필수)</h2>
+              <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">3. 증빙 사진 촬영 (필수)</h2>
               {isUploading && <Loader2 className="w-8 h-8 text-rose-600 animate-spin"/>}
             </div>
             <div className="grid grid-cols-3 gap-4 pt-2 font-black font-black">
@@ -1866,7 +2117,7 @@ export default function App() {
           </section>
 
           <section className="bg-white p-6 rounded-[44px] border-4 border-gray-900 shadow-2xl space-y-6 font-black font-black font-black">
-            <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">5. 대기 손님 파악</h2>
+            <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">4. 대기 손님 파악</h2>
             <div className="flex gap-4 pt-2 font-black font-black">
               <button onClick={()=>handleWaitingToggle(true)} className={`flex-1 py-7 rounded-[28px] font-black text-xl border-4 transition-all duration-300 transform active:scale-95 ${formData.waiting.hadWaiting===true?'bg-blue-600 border-blue-600 text-white shadow-2xl':'bg-white border-gray-100 text-gray-400'}`}>손님 있었음</button>
               <button onClick={()=>handleWaitingToggle(false)} className={`flex-1 py-7 rounded-[28px] font-black text-xl border-4 transition-all duration-300 transform active:scale-95 ${formData.waiting.hadWaiting===false?'bg-gray-900 border-gray-900 text-white shadow-2xl':'bg-white border-gray-100 text-gray-400'}`}>없었음</button>
@@ -1874,7 +2125,7 @@ export default function App() {
           </section>
 
           <section className="bg-white p-6 rounded-[44px] border-4 border-gray-900 shadow-2xl space-y-4 font-black font-black">
-            <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">6. 특이사항</h2>
+            <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">5. 특이사항</h2>
             <textarea rows="5" value={formData.notes} onChange={e=>setFormData({...formData, notes:e.target.value})} className="w-full bg-gray-100 rounded-[36px] p-8 border-none outline-none text-lg font-black text-gray-900 placeholder:text-gray-300 shadow-inner focus:ring-4 ring-rose-100 font-black font-black font-black" placeholder="사장님께 전달할 특별한 내용이 있다면 입력해 주세요..." />
           </section>
 
