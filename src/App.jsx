@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Camera, CheckCircle2, Circle, MapPin, Calendar, DollarSign, AlertCircle, FileText, User, Lock, Download, Image as ImageIcon, BarChart3, Users, LogOut, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, CalendarDays, List, HelpCircle, Edit2, Trash2, Save, Maximize2, Loader2, FileSpreadsheet, TrendingUp, Menu, MessageSquare, BookOpen, Clock, Power, Key, Thermometer, Droplets, Wind, Package, Trash, Shirt, Box, Play, Layers, PiggyBank, CreditCard, Coins, ShoppingCart, Percent, UserPlus, UserMinus, PlusCircle, MinusCircle, History, Wallet, Plus, PieChart, ArrowUp, ArrowDown } from 'lucide-react';
+import { Camera, CheckCircle2, Circle, MapPin, Calendar, DollarSign, AlertCircle, FileText, User, Lock, Download, Image as ImageIcon, BarChart3, Users, LogOut, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, CalendarDays, List, HelpCircle, Edit2, Trash2, Save, Maximize2, Loader2, FileSpreadsheet, TrendingUp, Menu, MessageSquare, BookOpen, Clock, Power, Key, Thermometer, Droplets, Wind, Package, Trash, Shirt, Box, Play, Layers, PiggyBank, CreditCard, Coins, ShoppingCart, Percent, UserPlus, UserMinus, PlusCircle, MinusCircle, History, Wallet, Plus, PieChart, ArrowUp, ArrowDown, Calculator } from 'lucide-react';
 
 // === Firebase Database Integration ===
 import { initializeApp } from 'firebase/app';
@@ -25,6 +25,17 @@ const db = getFirestore(app);
 
 const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'heart-pop-app-prod';
 const appId = rawAppId.replace(/\//g, '_');
+
+// =====================================================================
+// 💡 Constants (단가 및 설정)
+// =====================================================================
+const UNIT_PRICES = {
+  rice: 3500,  // 쌀 1kg당 가격
+  vinyl: 50,   // 포장 비닐 1장당 가격
+  tie: 10,     // 빵끈 1개당 가격
+};
+
+const ACCOUNT_OPTIONS = ['기업은행', '카뱅1', '카뱅2', '쿠팡와우', '현대카드'];
 
 // --- Helper Functions for Formatting ---
 const formatComma = (val) => {
@@ -166,9 +177,9 @@ export default function App() {
   const [customScheduleWorker, setCustomScheduleWorker] = useState('');
   const [newManagerName, setNewManagerName] = useState('');
   
-  // 비용 관리 폼 상태
+  // 비용 관리 폼 상태 (계좌 드롭다운 추가됨)
   const [costSelectionDate, setCostSelectionDate] = useState(null);
-  const [costForm, setCostForm] = useState({ category: '재료', amount: '', description: '' });
+  const [costForm, setCostForm] = useState({ category: '재료', amount: '', description: '', account: '기업은행' });
 
   // Q&A 폼용 상태
   const [qnaQuestion, setQnaQuestion] = useState('');
@@ -548,9 +559,10 @@ export default function App() {
         category: costForm.category,
         amount: Number(parseComma(costForm.amount)),
         description: costForm.description,
+        account: costForm.account || '기업은행', // 새로 추가된 계좌정보
         timestamp: new Date().toISOString()
       });
-      setCostForm({ category: '재료', amount: '', description: '' });
+      setCostForm({ category: '재료', amount: '', description: '', account: '기업은행' });
     } catch(e) { setAlertMessage("비용 등록 실패: " + e.message); }
   };
 
@@ -703,7 +715,7 @@ export default function App() {
     }).length;
 
     const avgRicePerDay = uniqueDaysCount > 0 ? (totalRice / uniqueDaysCount).toFixed(1) : 0;
-    const cumulativeRiceCost = totalRice * 2500;
+    const cumulativeRiceCost = totalRice * 2500; // 과거 고정 단가 참고치
     
     const expectedSales = totalRice * 42735;
     const lossAmount = expectedSales - total;
@@ -815,20 +827,24 @@ export default function App() {
     };
   }, [schedules, calendarDate, holidays]);
 
-  // 비용 관리 통계 계산 (수동 입력 + 자동 연동 인건비)
+  // 비용 관리 통계 계산 (수동 입력 + 자동 연동 인건비 + 자동 재료비 통합)
   const monthlyCosts = useMemo(() => {
     const year = calendarDate.getFullYear();
     const month = calendarDate.getMonth();
     let totalManual = 0;
     let manualByDate = {};
+    let dailyMaterialCosts = {};
+    let totalMaterial = 0;
     
     let categoryTotals = {
-      '급여': scheduleStats.grandTotalWage || 0,
+      '급여/인건비': scheduleStats.grandTotalWage || 0,
       '식비': scheduleStats.grandTotalMeal || 0,
-      '보험료': scheduleStats.grandTotalInsurance || 0
+      '보험료': scheduleStats.grandTotalInsurance || 0,
+      '재료비(자동)': 0 // 새로 추가된 자동 계산 재료비 카테고리
     };
     COST_CATEGORIES.forEach(c => { if (categoryTotals[c] === undefined) categoryTotals[c] = 0; });
 
+    // 1. 수동 비용
     costs.forEach(c => {
        const d = new Date(c.date);
        if (d.getFullYear() === year && d.getMonth() === month) {
@@ -845,8 +861,28 @@ export default function App() {
        }
     });
 
+    // 2. 일별 재료비 자동 환산 (보고서 기준)
+    reports.forEach(r => {
+      const d = new Date(r.date);
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        const usedRice = Number(r.inventory?.usedRice) || 0;
+        const sales = Number(r.totalSales) || 0;
+        const usedBags = Math.floor(sales / 5000);
+        
+        // 쌀, 비닐, 빵끈 합산 금액
+        const materialCost = (usedRice * UNIT_PRICES.rice) + (usedBags * UNIT_PRICES.vinyl) + (usedBags * UNIT_PRICES.tie);
+        
+        if (materialCost > 0) {
+          if (!dailyMaterialCosts[r.date]) dailyMaterialCosts[r.date] = 0;
+          dailyMaterialCosts[r.date] += materialCost;
+          totalMaterial += materialCost;
+          categoryTotals['재료비(자동)'] += materialCost;
+        }
+      }
+    });
+
     const totalLabor = scheduleStats.grandTotalLaborCost || 0;
-    const grandTotal = totalManual + totalLabor;
+    const grandTotal = totalManual + totalLabor + totalMaterial;
     const sales = monthlyStats.total || 0;
     const costPercentage = sales > 0 ? ((grandTotal / sales) * 100).toFixed(1) : 0;
 
@@ -859,8 +895,8 @@ export default function App() {
       }))
       .sort((a, b) => b.amount - a.amount);
 
-    return { totalManual, manualByDate, grandTotal, costPercentage, totalLabor, categoryBreakdown };
-  }, [costs, scheduleStats, calendarDate, monthlyStats]);
+    return { totalManual, manualByDate, dailyMaterialCosts, totalMaterial, grandTotal, costPercentage, totalLabor, categoryBreakdown };
+  }, [costs, scheduleStats, calendarDate, monthlyStats, reports]);
 
 
   const downloadCSV = () => {
@@ -970,7 +1006,8 @@ export default function App() {
       const manualList = monthlyCosts.manualByDate[dStr] || [];
       const manualSum = manualList.reduce((acc, c) => acc + Number(c.amount), 0);
       const laborSum = scheduleStats.dailyLaborCosts[dStr] || 0;
-      const totalDaily = manualSum + laborSum;
+      const materialSum = monthlyCosts.dailyMaterialCosts[dStr] || 0;
+      const totalDaily = manualSum + laborSum + materialSum;
       
       days.push(
         <div 
@@ -983,9 +1020,10 @@ export default function App() {
              {isHoliday && <span className="text-[8px] font-semibold text-gray-400 bg-gray-100 px-1 rounded uppercase tracking-tighter">휴무</span>}
           </div>
           <div className="mt-auto space-y-[2px] pt-1">
-             {laborSum > 0 && <div className="text-[8px] font-semibold bg-gray-100 text-gray-700 rounded px-1 flex justify-between"><span>급/식/보</span><span>{formatComma(laborSum)}</span></div>}
-             {manualSum > 0 && <div className="text-[8px] font-semibold bg-gray-200 text-gray-800 rounded px-1 flex justify-between"><span>기타비용</span><span>{formatComma(manualSum)}</span></div>}
-             {(laborSum > 0 || manualSum > 0) && <div className="text-[9px] font-bold text-right border-t border-gray-200 mt-[2px] pt-[2px] text-gray-900">{formatComma(totalDaily)}원</div>}
+             {laborSum > 0 && <div className="text-[8px] font-semibold bg-blue-100 text-blue-800 rounded px-1 flex justify-between"><span>급/식/보</span><span>{formatComma(laborSum)}</span></div>}
+             {materialSum > 0 && <div className="text-[8px] font-semibold bg-green-100 text-green-800 rounded px-1 flex justify-between"><span>재료비(자동)</span><span>{formatComma(materialSum)}</span></div>}
+             {manualSum > 0 && <div className="text-[8px] font-semibold bg-gray-200 text-gray-800 rounded px-1 flex justify-between"><span>기타수동</span><span>{formatComma(manualSum)}</span></div>}
+             {(laborSum > 0 || manualSum > 0 || materialSum > 0) && <div className="text-[9px] font-bold text-right border-t border-gray-200 mt-[2px] pt-[2px] text-gray-900">{formatComma(totalDaily)}원</div>}
           </div>
         </div>
       );
@@ -1469,11 +1507,17 @@ export default function App() {
                       <span className="text-[10px] text-gray-400">* 빵끈/비닐은 매출기반 자동 차감</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                       <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-center space-y-1.5">
-                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">뻥쌀 재고</span>
-                          <span className="text-2xl font-bold text-gray-900 tracking-tight">{currentStock.riceKg.toLocaleString()}<span className="text-xs ml-0.5 font-normal text-gray-500">kg</span></span>
-                          <span className="text-[10px] text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">일 평균 {averagesSinceMay2026.rice}kg</span>
-                          <div className="w-full border-t border-gray-200 mt-2 pt-2 text-center flex flex-col">
+                       <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-center space-y-1.5 relative overflow-hidden">
+                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest relative z-10">뻥쌀 재고</span>
+                          
+                          {/* 박스 단위 표시 변환부 */}
+                          <span className="text-2xl font-bold text-gray-900 tracking-tight relative z-10">
+                            {Math.floor(currentStock.riceKg / 20)}박스 {(currentStock.riceKg % 20).toFixed(1).replace(/\.0$/, '')}kg
+                            <span className="text-xs ml-1 font-normal text-gray-500">(총 {currentStock.riceKg.toLocaleString()}kg)</span>
+                          </span>
+
+                          <span className="text-[10px] text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200 relative z-10">일 평균 {averagesSinceMay2026.rice}kg</span>
+                          <div className="w-full border-t border-gray-200 mt-2 pt-2 text-center flex flex-col relative z-10">
                              <span className="text-[9px] text-gray-400 font-semibold uppercase">잔여 영업일({remainingDaysThisMonth}일) 필요량</span>
                              <span className="text-xs font-bold text-gray-700">{(averagesSinceMay2026.rice * remainingDaysThisMonth).toFixed(1)}kg</span>
                           </div>
@@ -1755,7 +1799,7 @@ export default function App() {
             </div>
           )}
 
-          {/* 비용 상세 모달 */}
+          {/* 비용 상세 모달 (자동 환산 + 계좌 드롭다운 기능 추가) */}
           {view === 'admin' && costSelectionDate && (
             <div className="fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-200">
               <div className="bg-white p-6 rounded-3xl w-full max-w-sm border border-gray-200 shadow-xl animate-in zoom-in-95 flex flex-col max-h-[85vh]">
@@ -1768,9 +1812,20 @@ export default function App() {
                 </div>
 
                 <div className="overflow-y-auto pr-1 space-y-5">
-                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex justify-between items-center">
-                      <span className="text-[11px] font-semibold text-gray-600 flex items-center gap-1.5"><CalendarDays size={14}/> 인건비 (자동)</span>
-                      <span className="text-base font-bold text-gray-800">{formatComma(scheduleStats.dailyLaborCosts[costSelectionDate] || 0)}원</span>
+                   <div className="space-y-2">
+                     <h4 className="text-[10px] text-gray-400 font-semibold pl-1">자동 계산 내역</h4>
+                     {/* 자동 인건비 표시 */}
+                     <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 flex justify-between items-center">
+                        <span className="text-[11px] font-semibold text-blue-800 flex items-center gap-1.5"><CalendarDays size={14}/> 인건비 (자동 산출)</span>
+                        <span className="text-base font-bold text-blue-900">{formatComma(scheduleStats.dailyLaborCosts[costSelectionDate] || 0)}원</span>
+                     </div>
+                     {/* 자동 재료비(쌀, 비닐, 빵끈) 표시 */}
+                     {monthlyCosts.dailyMaterialCosts[costSelectionDate] > 0 && (
+                        <div className="bg-green-50 p-4 rounded-xl border border-green-200 flex justify-between items-center">
+                           <span className="text-[11px] font-semibold text-green-800 flex items-center gap-1.5"><Box size={14}/> 재료비 (자동 산출)</span>
+                           <span className="text-base font-bold text-green-900">{formatComma(monthlyCosts.dailyMaterialCosts[costSelectionDate])}원</span>
+                        </div>
+                     )}
                    </div>
 
                    <div className="space-y-2">
@@ -1782,6 +1837,7 @@ export default function App() {
                            <div key={c.id} className="bg-white p-3 rounded-xl border border-gray-200 flex justify-between items-center">
                               <div>
                                 <span className="text-[9px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 mr-1.5 border border-gray-200">{c.category}</span>
+                                <span className="text-[9px] bg-gray-50 text-gray-600 px-1.5 py-0.5 rounded mr-1.5 border border-gray-200">{c.account || '기업은행'}</span>
                                 <span className="text-xs font-semibold text-gray-800">{c.description}</span>
                               </div>
                               <div className="flex items-center gap-2">
@@ -1795,6 +1851,7 @@ export default function App() {
 
                    <div className="bg-white p-4 rounded-xl border border-gray-200 space-y-2.5">
                       <h4 className="text-[11px] text-gray-700 font-bold mb-1 flex items-center gap-1.5"><Plus size={12}/> 항목 추가</h4>
+                      
                       <div className="flex gap-2">
                          <select value={costForm.category} onChange={e=>setCostForm({...costForm, category: e.target.value})} className="w-2/5 p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-800 outline-none">
                             {COST_CATEGORIES.map(cat => (
@@ -1803,7 +1860,14 @@ export default function App() {
                          </select>
                          <input type="text" value={formatComma(costForm.amount)} onChange={e=>setCostForm({...costForm, amount: parseComma(e.target.value)})} placeholder="금액" className="w-3/5 p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-sm font-bold text-right text-gray-900 outline-none" />
                       </div>
-                      <input type="text" value={costForm.description} onChange={e=>setCostForm({...costForm, description: e.target.value})} placeholder="내용 설명" className="w-full p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-800 outline-none" />
+                      <div className="flex gap-2">
+                        <select value={costForm.account} onChange={e=>setCostForm({...costForm, account: e.target.value})} className="w-2/5 p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-800 outline-none">
+                           {ACCOUNT_OPTIONS.map(acc => (
+                             <option key={acc} value={acc}>{acc}</option>
+                           ))}
+                        </select>
+                        <input type="text" value={costForm.description} onChange={e=>setCostForm({...costForm, description: e.target.value})} placeholder="내용 설명" className="w-3/5 p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-800 outline-none" />
+                      </div>
                       <button onClick={handleAddCost} className="w-full py-3 bg-gray-900 text-white rounded-lg text-xs font-bold mt-1 active:scale-95 transition-transform">추가하기</button>
                    </div>
                 </div>
@@ -2125,18 +2189,18 @@ export default function App() {
           <img src={selectedPhoto.url} className="max-w-full max-h-[75vh] rounded-2xl shadow-xl animate-in zoom-in-95" />
           <div className="text-center mt-6 text-white animate-in slide-in-from-bottom-4">
             <p className="text-xl mb-1 font-bold">{String(selectedPhoto.name)}</p>
-            <p className="text-gray-400 text-sm font-medium">{String(selectedPhoto.date)} | {String(selectedPhoto.worker)}</p>
+            <p className="text-gray-400 text-sm font-medium">{String(selectedPhoto.date)} | {String(selectedPhoto.worker)} MANAGER</p>
           </div>
         </div>
       )}
       {deleteConfirmId && (
-        <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in">
-           <div className="bg-white p-8 rounded-3xl w-full max-w-sm text-center shadow-xl animate-in zoom-in-95">
-              <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><AlertCircle size={40} className="text-gray-700"/></div>
-              <p className="font-bold text-gray-900 mb-8 text-lg">해당 항목을<br/>삭제하시겠습니까?</p>
-              <div className="flex gap-3">
-                 <button onClick={()=>setDeleteConfirmId(null)} className="flex-1 py-4 bg-gray-100 rounded-xl font-semibold text-sm text-gray-600 hover:bg-gray-200 transition-colors">취소</button>
-                 <button onClick={()=>executeDelete(deleteConfirmId.id)} className="flex-1 py-4 bg-gray-900 text-white rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all">삭제 승인</button>
+        <div className="fixed inset-0 bg-black/85 z-[200] flex items-center justify-center p-8 backdrop-blur-md animate-in fade-in duration-200 font-black font-black font-black font-black">
+           <div className="bg-white p-12 rounded-[56px] w-full max-w-sm text-center border-[10px] border-red-600 shadow-2xl animate-in zoom-in-95 duration-300 font-black font-black font-black">
+              <div className="bg-red-50 w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner font-black"><AlertCircle size={64} className="text-red-600"/></div>
+              <p className="font-black text-gray-900 mb-12 text-3xl tracking-tight leading-tight font-black">정말 이 항목을<br/>영구 삭제하시겠습니까?</p>
+              <div className="flex gap-4 font-black font-black font-black">
+                 <button onClick={()=>setDeleteConfirmId(null)} className="flex-1 py-6 bg-gray-100 rounded-[28px] font-black text-xl text-gray-500 hover:bg-gray-200 transition-colors font-black font-black">취소</button>
+                 <button onClick={()=>executeDelete(deleteConfirmId.id)} className="flex-1 py-6 bg-red-600 rounded-[28px] font-black text-xl text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-500/50">삭제 승인</button>
               </div>
            </div>
         </div>
