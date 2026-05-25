@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Camera, CheckCircle2, Circle, MapPin, Calendar, DollarSign, AlertCircle, FileText, User, Lock, Download, Image as ImageIcon, BarChart3, Users, LogOut, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, CalendarDays, List, HelpCircle, Edit2, Trash2, Save, Maximize2, Loader2, FileSpreadsheet, TrendingUp, Menu, MessageSquare, BookOpen, Clock, Power, Key, Thermometer, Droplets, Wind, Package, Trash, Shirt, Box, Play, Layers, PiggyBank, CreditCard, Coins, ShoppingCart, Percent, UserPlus, UserMinus, PlusCircle, MinusCircle, History, Wallet, Plus, PieChart } from 'lucide-react';
+import { Camera, CheckCircle2, Circle, MapPin, Calendar, DollarSign, AlertCircle, FileText, User, Lock, Download, Image as ImageIcon, BarChart3, Users, LogOut, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, CalendarDays, List, HelpCircle, Edit2, Trash2, Save, Maximize2, Loader2, FileSpreadsheet, TrendingUp, Menu, MessageSquare, BookOpen, Clock, Power, Key, Thermometer, Droplets, Wind, Package, Trash, Shirt, Box, Play, Layers, PiggyBank, CreditCard, Coins, ShoppingCart, Percent, UserPlus, UserMinus, PlusCircle, MinusCircle, History, Wallet, Plus, PieChart, ArrowUp, ArrowDown } from 'lucide-react';
 
 // === Firebase Database Integration ===
 import { initializeApp } from 'firebase/app';
@@ -46,25 +46,23 @@ const COST_CATEGORIES = [
   '임차료', '교통비', '차량유지비', '배송비(우편 및 용달)', '기타'
 ];
 
-// 매니저별 은은한 배경색 리스트
+// 은은한 파스텔 매니저 컬러맵 적용
 const managerColorMap = {
-  '정윤이': 'bg-rose-100 text-rose-700 border-rose-200',
-  '황진웅': 'bg-blue-100 text-blue-700 border-blue-200',
-  '최윤미': 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  '장유미': 'bg-purple-100 text-purple-700 border-purple-200',
-  '윤종규': 'bg-amber-100 text-amber-700 border-amber-200',
-  'default': 'bg-gray-100 text-gray-700 border-gray-200'
+  '정윤이': 'bg-blue-50 text-blue-700 border-blue-200',
+  '황진웅': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  '최윤미': 'bg-amber-50 text-amber-700 border-amber-200',
+  '장유미': 'bg-purple-50 text-purple-700 border-purple-200',
+  '윤종규': 'bg-rose-50 text-rose-700 border-rose-200',
+  'default': 'bg-gray-50 text-gray-700 border-gray-200'
 };
 
 const dynamicColors = [
-  'bg-cyan-100 text-cyan-700 border-cyan-200',
-  'bg-indigo-100 text-indigo-700 border-indigo-200',
-  'bg-orange-100 text-orange-700 border-orange-200',
-  'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200',
-  'bg-lime-100 text-lime-700 border-lime-200'
+  'bg-cyan-50 text-cyan-700 border-cyan-200',
+  'bg-indigo-50 text-indigo-700 border-indigo-200',
+  'bg-orange-50 text-orange-700 border-orange-200',
+  'bg-teal-50 text-teal-700 border-teal-200'
 ];
 
-// 이름에 따른 고유 색상 배정 함수
 const getManagerColor = (name) => {
   if (managerColorMap[name]) return managerColorMap[name];
   let hash = 0;
@@ -87,32 +85,32 @@ const inventoryTypeNames = {
 };
 
 const openManualItems = [
-  { id: 1, title: 'POS 전원 켜기 + KFPOS 프로그램 켜기', icon: <Power className="text-blue-500"/> },
-  { id: 2, title: '돈통 열쇠 찾아서 열기', icon: <Key className="text-amber-500"/> },
-  { id: 3, title: '기계 전원 연결 + 히터 켜기(240도 확인)', icon: <Thermometer className="text-red-500"/> },
-  { id: 4, title: '아크릴 보관함 내부 세척(물티슈)', icon: <Droplets className="text-cyan-500"/> },
-  { id: 5, title: '매대 및 뒤쪽 보관함 전체 에어건 청소', icon: <Wind className="text-slate-400"/> },
-  { id: 6, title: '포장 비닐, 위생장갑, 빵끈 꺼내기', icon: <Package className="text-orange-400"/> },
-  { id: 7, title: '쓰레기 봉투 및 로스뻥튀기 봉투 부착', icon: <Trash className="text-gray-400"/> },
-  { id: 8, title: '모자, 앞치마, 위생마스크, 이어플러그, 장갑 착용', icon: <Shirt className="text-indigo-500"/> },
-  { id: 9, title: '사용할 쌀 재고 확인', icon: <Box className="text-yellow-600"/> },
-  { id: 10, title: '쌀 넣고 기계 작동시키기', icon: <Play className="text-green-500"/> },
-  { id: 11, title: '재고 가림막(보자기천) 제거하기', icon: <Layers className="text-purple-500"/> },
+  { id: 1, title: 'POS 전원 켜기 + KFPOS 프로그램 켜기', icon: <Power className="text-gray-500"/> },
+  { id: 2, title: '돈통 열쇠 찾아서 열기', icon: <Key className="text-gray-500"/> },
+  { id: 3, title: '기계 전원 연결 및 히터 켜기', icon: <Thermometer className="text-gray-500"/> },
+  { id: 4, title: '아크릴 보관함 내부 세척(물티슈)', icon: <Droplets className="text-gray-500"/> },
+  { id: 5, title: '매대 및 뒤쪽 보관함 전체 에어건 청소', icon: <Wind className="text-gray-500"/> },
+  { id: 6, title: '포장 비닐, 위생장갑, 빵끈 꺼내기', icon: <Package className="text-gray-500"/> },
+  { id: 7, title: '쓰레기 봉투 및 로스뻥튀기 봉투 부착', icon: <Trash className="text-gray-500"/> },
+  { id: 8, title: '모자, 앞치마, 위생마스크, 이어플러그, 장갑 착용', icon: <Shirt className="text-gray-500"/> },
+  { id: 9, title: '사용할 쌀 재고 확인', icon: <Box className="text-gray-500"/> },
+  { id: 10, title: '쌀 넣고 기계 작동시키기', icon: <Play className="text-gray-500"/> },
+  { id: 11, title: '재고 가림막(보자기천) 제거하기', icon: <Layers className="text-gray-500"/> },
 ];
 
 const closeManualItems = [
-  { id: 1, title: '기계 쌀통에 있는 쌀을 모두 빼주세요. (7~8분 더 작동합니다.)', icon: <Box className="text-orange-600"/> },
-  { id: 2, title: '돈통에 있는 현금과 매입일지의 현금이 일치하는지 확인', icon: <DollarSign className="text-green-600"/> },
-  { id: 3, title: 'POS에서 마감진행 + 매출일지 작성 + 사진촬영', icon: <Camera className="text-blue-500"/> },
-  { id: 4, title: '쌀이 끊기면 기계를 끄고 기계 청소를 진행합니다. (마감방법 준수)', icon: <Wind className="text-slate-400"/> },
-  { id: 5, title: '남은 뻥튀기 마저 포장하고 아크릴 보관함 세척', icon: <Droplets className="text-cyan-500"/> },
-  { id: 6, title: '재고를 보자기천으로 가려주세요.', icon: <Layers className="text-purple-500"/> },
-  { id: 7, title: '에어건으로 전체적으로 청소해주세요.', icon: <Wind className="text-slate-400"/> },
-  { id: 8, title: '잡동사니 및 사용한 물품을 플라스틱 보관함에 넣어주세요.', icon: <Box className="text-amber-500"/> },
-  { id: 9, title: 'POS 끄기 + 열쇠 숨기기', icon: <Power className="text-red-500"/> },
-  { id: 10, title: '마감보고 작성해주세요.', icon: <FileText className="text-rose-600"/> },
-  { id: 11, title: '외부인 출입이 안되도록 출입구를 막아주세요.', icon: <Lock className="text-gray-900"/> },
-  { id: 12, title: '로스뻥튀기 봉투와 쓰레기봉투를 외부 쓰레기장에 버려주세요.', icon: <Trash className="text-gray-400"/> },
+  { id: 1, title: '기계 쌀통에 있는 쌀을 모두 빼주세요. (7~8분 더 작동합니다.)', icon: <Box className="text-gray-500"/> },
+  { id: 2, title: '쌀이 끊기면 기계를 끄고 기계 청소를 진행합니다. (마감방법 준수)', icon: <Wind className="text-gray-500"/> },
+  { id: 3, title: '남은 뻥튀기 마저 포장하고 아크릴 보관함 세척', icon: <Droplets className="text-gray-500"/> },
+  { id: 4, title: '재고를 보자기천으로 가려주세요.', icon: <Layers className="text-gray-500"/> },
+  { id: 5, title: '에어건으로 전체적으로 청소해주세요.', icon: <Wind className="text-gray-500"/> },
+  { id: 6, title: '잡동사니 및 사용한 물품을 플라스틱 보관함에 넣어주세요.', icon: <Box className="text-gray-500"/> },
+  { id: 7, title: '돈통에 있는 현금과 매입일지의 현금이 일치하는지 확인', icon: <DollarSign className="text-gray-500"/> },
+  { id: 8, title: 'POS에서 마감진행 + 매출일지 작성 + 사진촬영', icon: <Camera className="text-gray-500"/> },
+  { id: 9, title: 'POS 끄기 + 열쇠 숨기기', icon: <Power className="text-gray-500"/> },
+  { id: 10, title: '마감보고 작성해주세요.', icon: <FileText className="text-gray-500"/> },
+  { id: 11, title: '외부인 출입이 안되도록 출입구를 막아주세요.', icon: <Lock className="text-gray-500"/> },
+  { id: 12, title: '로스뻥튀기 봉투와 쓰레기봉투를 외부 쓰레기장에 버려주세요.', icon: <Trash className="text-gray-500"/> },
 ];
 
 const getTodayString = () => {
@@ -626,7 +624,7 @@ export default function App() {
     };
   }, [reports]);
 
-  // 이번 달 남은 영업일 계산: 집계달력 기준 이번 달 남은 일수 - 휴무일 - 상/하 마감 제출일 제외
+  // 이번 달 남은 영업일 계산: 집계달력 기준 이번 달 전체 일수 - 휴무일 - 상/하 마감 모두 제출된 일자
   const remainingDaysThisMonth = useMemo(() => {
     const todayStr = getTodayString();
     const todayDate = new Date(todayStr);
@@ -637,11 +635,9 @@ export default function App() {
     let count = 0;
     for (let d = 1; d <= daysInMonth; d++) {
       const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      // 오늘 포함, 남은 일자 계산
-      if (dStr >= todayStr && !holidays.includes(dStr)) {
+      if (!holidays.includes(dStr)) {
         const hasSang = reports.some(r => r.date === dStr && r.location === '상행선');
         const hasHa = reports.some(r => r.date === dStr && r.location === '하행선');
-        // 상행선, 하행선 모두 제출된 날이면 필요량 계산에서 제외
         if (!(hasSang && hasHa)) {
           count++;
         }
@@ -868,7 +864,7 @@ export default function App() {
 
 
   const downloadCSV = () => {
-    const headers = ['일자', '위치', '매니저', '총매출', '현금', '카드', '사용한쌀(kg)', '로스(kg)', '재고(개)', '특이사항'];
+    const headers = ['일자', '위치', '매니저', '총매출', '현금', '카드', '사용한쌀(kg)', '로스(kg)', '남아있는 뻥튀기 (봉투)', '개선이 필요한 부분'];
     const rows = filteredReports.map(r => [
       r.date, r.location, r.worker, r.totalSales, r.sales?.cash, r.sales?.card, 
       r.inventory?.usedRice, r.inventory?.loss || 0, r.inventory?.stockCount, 
@@ -901,15 +897,15 @@ export default function App() {
         <div 
           key={d} 
           onClick={() => toggleHoliday(dStr)}
-          className={`p-1.5 border border-gray-200 min-h-[90px] flex flex-col rounded-lg cursor-pointer transition-all hover:scale-[1.03] ${dStr === getTodayString() ? 'bg-rose-50 border-rose-300' : isHoliday ? 'bg-gray-100 border-gray-300' : 'bg-white'}`}
+          className={`p-1.5 border border-gray-200 min-h-[90px] flex flex-col rounded-lg cursor-pointer transition-all hover:bg-gray-50 ${dStr === getTodayString() ? 'bg-gray-100 border-gray-400' : isHoliday ? 'bg-gray-50 border-gray-200 opacity-50' : 'bg-white'}`}
         >
-          <span className={`text-xs font-black ${isHoliday ? 'text-gray-400' : 'text-gray-500'}`}>{d}</span>
-          {isHoliday && <span className="text-[10px] font-black text-gray-400 mt-1 uppercase tracking-tighter text-center">휴무</span>}
+          <span className={`text-xs font-semibold ${isHoliday ? 'text-gray-400' : 'text-gray-700'}`}>{d}</span>
+          {isHoliday && <span className="text-[10px] font-semibold text-gray-400 mt-1 uppercase tracking-tighter text-center">휴무</span>}
           {!isHoliday && (sangSales > 0 || haSales > 0) && (
             <div className="mt-auto flex flex-col items-end space-y-[2px] pt-1">
-              {sangSales > 0 && <span className="text-[8px] font-black text-red-600 leading-none">상:{formatComma(sangSales)}</span>}
-              {haSales > 0 && <span className="text-[8px] font-black text-blue-600 leading-none">하:{formatComma(haSales)}</span>}
-              <span className="text-[9px] font-black text-gray-900 border-t border-gray-200 pt-[2px] mt-[2px] w-full text-right leading-none">합:{formatComma(sales)}</span>
+              {sangSales > 0 && <span className="text-[8px] font-semibold text-red-600 leading-none flex items-center justify-end gap-0.5">상:{formatComma(sangSales)} <ArrowUp size={8} style={{transform:'rotate(20deg)'}}/></span>}
+              {haSales > 0 && <span className="text-[8px] font-semibold text-blue-600 leading-none flex items-center justify-end gap-0.5">하:{formatComma(haSales)} <ArrowDown size={8} style={{transform:'rotate(20deg)'}}/></span>}
+              <span className="text-[9px] font-bold text-gray-900 border-t border-gray-200 pt-[2px] mt-[2px] w-full text-right leading-none">합:{formatComma(sales)}</span>
             </div>
           )}
         </div>
@@ -942,14 +938,14 @@ export default function App() {
                 setScheduleWage(scheduleData && scheduleData.wage ? String(scheduleData.wage) : '');
              }
           }}
-          className={`p-1 border min-h-[70px] flex flex-col rounded-lg transition-all ${isToday ? 'border-red-500 border-2' : 'border-gray-200'} ${isHoliday ? 'bg-gray-50 border-gray-100 cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-gray-900 bg-white active:scale-95'}`}
+          className={`p-1 border min-h-[70px] flex flex-col rounded-lg transition-all ${isToday ? 'border-gray-500 border-2' : 'border-gray-200'} ${isHoliday ? 'bg-gray-50 border-gray-100 cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-gray-400 bg-white active:scale-95'}`}
         >
-          <span className={`text-xs font-black ${isToday ? 'text-red-500' : isHoliday ? 'text-gray-300' : 'text-gray-400'}`}>{d}</span>
+          <span className={`text-xs font-semibold ${isToday ? 'text-gray-900' : isHoliday ? 'text-gray-300' : 'text-gray-500'}`}>{d}</span>
           {isHoliday && (
-             <div className="mt-auto bg-gray-200 text-gray-400 p-1 rounded text-center text-[10px] font-black font-sans uppercase">휴무</div>
+             <div className="mt-auto bg-gray-100 text-gray-400 p-1 rounded text-center text-[10px] font-semibold uppercase">휴무</div>
           )}
           {!isHoliday && assignedManager && (
-            <div className={`mt-auto px-0 py-[2px] rounded text-center text-[9px] font-black animate-in fade-in zoom-in font-sans border whitespace-nowrap overflow-hidden text-ellipsis tracking-tighter flex flex-col ${getManagerColor(assignedManager)}`}>
+            <div className={`mt-auto px-0 py-[2px] rounded text-center text-[9px] font-semibold animate-in fade-in zoom-in border whitespace-nowrap overflow-hidden text-ellipsis tracking-tighter flex flex-col ${getManagerColor(assignedManager)}`}>
               <span>{assignedManager}</span>
               {assignedWage > 0 && <span className="text-[7px] border-t border-black/10 pt-[1px] mt-[1px] opacity-80">{formatComma(assignedWage)}원</span>}
             </div>
@@ -980,16 +976,16 @@ export default function App() {
         <div 
           key={d} 
           onClick={() => setCostSelectionDate(dStr)}
-          className={`p-1.5 border min-h-[90px] flex flex-col rounded-lg transition-all ${isToday ? 'border-rose-500 border-2 bg-rose-50' : 'border-gray-200 bg-white'} cursor-pointer hover:border-gray-900 active:scale-95`}
+          className={`p-1.5 border min-h-[90px] flex flex-col rounded-lg transition-all ${isToday ? 'border-gray-500 border-2 bg-gray-50' : 'border-gray-200 bg-white'} cursor-pointer hover:border-gray-400 active:scale-95`}
         >
           <div className="flex justify-between items-start">
-             <span className={`text-xs font-black ${isToday ? 'text-rose-600' : isHoliday ? 'text-gray-300' : 'text-gray-500'}`}>{d}</span>
-             {isHoliday && <span className="text-[8px] font-black text-gray-400 bg-gray-100 px-1 rounded uppercase tracking-tighter">휴무</span>}
+             <span className={`text-xs font-semibold ${isToday ? 'text-gray-900' : isHoliday ? 'text-gray-300' : 'text-gray-600'}`}>{d}</span>
+             {isHoliday && <span className="text-[8px] font-semibold text-gray-400 bg-gray-100 px-1 rounded uppercase tracking-tighter">휴무</span>}
           </div>
           <div className="mt-auto space-y-[2px] pt-1">
-             {laborSum > 0 && <div className="text-[8px] font-black bg-blue-50 text-blue-600 rounded px-1 flex justify-between"><span>급/식/보</span><span>{formatComma(laborSum)}</span></div>}
-             {manualSum > 0 && <div className="text-[8px] font-black bg-orange-50 text-orange-600 rounded px-1 flex justify-between"><span>기타비용</span><span>{formatComma(manualSum)}</span></div>}
-             {(laborSum > 0 || manualSum > 0) && <div className="text-[9px] font-black text-right border-t border-gray-200 mt-[2px] pt-[2px] text-gray-900">{formatComma(totalDaily)}원</div>}
+             {laborSum > 0 && <div className="text-[8px] font-semibold bg-gray-100 text-gray-700 rounded px-1 flex justify-between"><span>급/식/보</span><span>{formatComma(laborSum)}</span></div>}
+             {manualSum > 0 && <div className="text-[8px] font-semibold bg-gray-200 text-gray-800 rounded px-1 flex justify-between"><span>기타비용</span><span>{formatComma(manualSum)}</span></div>}
+             {(laborSum > 0 || manualSum > 0) && <div className="text-[9px] font-bold text-right border-t border-gray-200 mt-[2px] pt-[2px] text-gray-900">{formatComma(totalDaily)}원</div>}
           </div>
         </div>
       );
@@ -1001,25 +997,25 @@ export default function App() {
     <div className={`fixed inset-0 z-50 flex transition-opacity duration-300 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />
       <div className={`relative w-64 bg-white h-full shadow-2xl transition-transform duration-300 transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-6 border-b-4 border-gray-900 bg-rose-600 text-white font-black">
-          <h2 className="font-black text-xl flex items-center gap-2">❤️ 하트메뉴</h2>
+        <div className="p-6 border-b border-gray-200 bg-gray-900 text-white">
+          <h2 className="font-bold text-xl flex items-center gap-2">메뉴</h2>
         </div>
         <div className="p-4 space-y-2">
-          <button onClick={() => { setView('form'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-black transition-all ${view === 'form' ? 'bg-rose-600 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-100'}`}>
+          <button onClick={() => { setView('form'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-xl font-medium transition-all ${view === 'form' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
             <FileText size={20}/> 업무공유 리포트
           </button>
-          <button onClick={() => { setView('qna'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-black transition-all ${view === 'qna' ? 'bg-rose-600 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-100'}`}>
+          <button onClick={() => { setView('qna'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-xl font-medium transition-all ${view === 'qna' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
             <HelpCircle size={20}/> 질문과 답변 (Q&A)
           </button>
-          <div className="pt-4 pb-2 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest font-sans font-black">Manuals</div>
-          <button onClick={() => { setView('manual_open'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-black transition-all ${view === 'manual_open' ? 'bg-rose-600 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-100'}`}>
+          <div className="pt-4 pb-2 px-4 text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Manuals</div>
+          <button onClick={() => { setView('manual_open'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-xl font-medium transition-all ${view === 'manual_open' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
             <BookOpen size={20}/> 오픈 매뉴얼
           </button>
-          <button onClick={() => { setView('manual_close'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-2xl font-black transition-all ${view === 'manual_close' ? 'bg-rose-600 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-100'}`}>
+          <button onClick={() => { setView('manual_close'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-xl font-medium transition-all ${view === 'manual_close' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
             <Clock size={20}/> 마감 매뉴얼
           </button>
-          <div className="pt-8 mt-8 border-t-2 border-gray-100">
-            <button onClick={() => { setView('login'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 p-4 rounded-2xl font-black text-gray-400 hover:text-gray-900 transition-all font-black">
+          <div className="pt-8 mt-8 border-t border-gray-100">
+            <button onClick={() => { setView('login'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 p-4 rounded-xl font-medium text-gray-400 hover:text-gray-900 transition-all">
               <Lock size={20}/> 관리자 로그인
             </button>
           </div>
@@ -1031,14 +1027,14 @@ export default function App() {
   const renderView = () => {
     if (view === 'login') {
       return (
-        <div className="max-w-md mx-auto min-h-screen flex items-center justify-center p-4 bg-white font-sans font-black">
-          <div className="bg-white p-8 rounded-2xl shadow-2xl w-full border-2 border-gray-900 text-center font-black">
-            <h2 className="text-2xl font-black mb-8 text-gray-900">관리자 보안 접속</h2>
+        <div className="max-w-md mx-auto min-h-screen flex items-center justify-center p-4 bg-gray-50 font-sans">
+          <div className="bg-white p-8 rounded-2xl shadow-sm w-full border border-gray-200 text-center">
+            <h2 className="text-2xl font-bold mb-8 text-gray-900">관리자 접속</h2>
             <form onSubmit={(e) => { e.preventDefault(); if (adminPwd === '940329') { setView('admin'); setIsAdmin(true); setAdminPwd(''); } else setAlertMessage('인증 암호가 일치하지 않습니다.'); }} className="space-y-6">
-              <input type="password" autoFocus value={adminPwd} onChange={e=>setAdminPwd(e.target.value)} className="w-full p-5 bg-gray-100 rounded-xl border-none outline-none text-center text-3xl font-black focus:ring-4 ring-rose-500 text-gray-900 shadow-inner" placeholder="••••••" />
-              <button type="submit" className="w-full bg-gray-900 text-white py-5 rounded-xl font-black text-xl active:scale-95 transition-transform font-black">인증하기</button>
+              <input type="password" autoFocus value={adminPwd} onChange={e=>setAdminPwd(e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 outline-none text-center text-3xl tracking-widest focus:ring-2 ring-gray-400 text-gray-900" placeholder="••••••" />
+              <button type="submit" className="w-full bg-gray-900 text-white py-4 rounded-xl font-semibold text-lg active:scale-95 transition-transform">인증하기</button>
             </form>
-            <button onClick={()=>setView('form')} className="mt-6 text-gray-900 font-bold text-sm underline font-black">돌아가기</button>
+            <button onClick={()=>setView('form')} className="mt-6 text-gray-500 hover:text-gray-900 font-medium text-sm underline transition-colors">돌아가기</button>
           </div>
         </div>
       );
@@ -1046,130 +1042,131 @@ export default function App() {
 
     if (view === 'admin') {
       return (
-        <div className="max-w-4xl mx-auto bg-white min-h-screen pb-32 font-sans font-black">
-          <header className="bg-white p-6 sticky top-0 z-30 border-b-4 border-gray-900 flex justify-between items-center shadow-lg font-black font-black">
-            <h1 className="font-black text-xl flex items-center gap-2 text-gray-900"><BarChart3 className="text-rose-600"/> 하트뻥튀기 (처인휴게소)</h1>
-            <button onClick={()=>{setView('form'); setIsAdmin(false);}} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"><LogOut size={24} className="text-gray-900"/></button>
+        <div className="max-w-4xl mx-auto bg-gray-50 min-h-screen pb-32 font-sans">
+          <header className="bg-white p-6 sticky top-0 z-30 border-b border-gray-200 flex justify-between items-center shadow-sm">
+            <h1 className="font-bold text-xl flex items-center gap-2 text-gray-900"><BarChart3 className="text-gray-600"/> 운영 관리 시스템</h1>
+            <button onClick={()=>{setView('form'); setIsAdmin(false);}} className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"><LogOut size={20} className="text-gray-900"/></button>
           </header>
-          <div className="p-4 space-y-8 font-black font-black">
-            <div className="bg-white p-6 rounded-[40px] border-4 border-gray-900 shadow-xl space-y-6 animate-in slide-in-from-top-4 font-black">
+          
+          <div className="p-4 space-y-6">
+            {/* 공통 상단: 월간 누적 매출 및 월 변경 */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6 animate-in slide-in-from-top-4">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                 <div className="space-y-1">
-                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest font-sans font-black">월간 누적 매출</h3>
-                    <p className="text-5xl font-black text-rose-600 tracking-tight leading-none">{monthlyStats.total.toLocaleString()}원</p>
-                    <p className="text-sm font-black text-gray-400 mt-2 font-sans tracking-tight">💰 정산 예정 금액 (60%): {(monthlyStats.total * 0.6).toLocaleString()}원</p>
+                 <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <button onClick={()=>setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth()-1, 1))} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"><ChevronLeft size={20}/></button>
+                      <h3 className="text-lg font-bold text-gray-800">{calendarDate.getFullYear()}년 {calendarDate.getMonth()+1}월 누적 매출</h3>
+                      <button onClick={()=>setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth()+1, 1))} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"><ChevronRight size={20}/></button>
+                    </div>
+                    <p className="text-4xl font-bold text-gray-900 tracking-tight leading-none pt-2">{monthlyStats.total.toLocaleString()}원</p>
+                    <p className="text-sm font-medium text-gray-500 tracking-tight">💰 정산 예정 금액 (60%): {(monthlyStats.total * 0.6).toLocaleString()}원</p>
                  </div>
-                 <button onClick={downloadCSV} className="bg-green-600 text-white px-6 py-4 rounded-2xl font-black text-sm flex items-center gap-2 active:scale-95 shadow-xl font-sans"><FileSpreadsheet size={20}/> 엑셀(CSV) 다운로드</button>
+                 <button onClick={downloadCSV} className="bg-gray-900 text-white px-5 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 hover:bg-gray-800 active:scale-95 shadow-sm transition-all"><FileSpreadsheet size={18}/> 엑셀(CSV) 다운로드</button>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="bg-red-50 p-5 rounded-3xl border-2 border-red-200 shadow-inner">
-                    <h4 className="text-[10px] font-black text-red-400 mb-1 uppercase tracking-tighter">상행선 누적</h4>
-                    <p className="text-2xl font-black text-red-600">{monthlyStats.sang.toLocaleString()}원</p>
+              <div className="grid grid-cols-2 gap-3">
+                 <div className="bg-red-50 p-4 rounded-xl border border-red-100">
+                    <h4 className="text-[10px] font-semibold text-red-500 mb-1 uppercase tracking-tighter flex items-center gap-1">상행선 누적 <ArrowUp size={12} className="text-red-500" style={{transform:'rotate(20deg)'}}/></h4>
+                    <p className="text-xl font-bold text-red-700">{monthlyStats.sang.toLocaleString()}원</p>
                  </div>
-                 <div className="bg-blue-50 p-5 rounded-3xl border-2 border-blue-200 shadow-inner">
-                    <h4 className="text-[10px] font-black text-blue-400 mb-1 uppercase tracking-tighter">하행선 누적</h4>
-                    <p className="text-2xl font-black text-blue-600">{monthlyStats.ha.toLocaleString()}원</p>
-                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                 <div className="bg-gray-50 p-5 rounded-3xl border-2 border-gray-200 shadow-sm">
-                    <h4 className="text-[10px] font-black text-gray-400 mb-1 uppercase tracking-tighter">현금 누적 ({monthlyStats.cashPercent}%)</h4>
-                    <p className="text-2xl font-black text-gray-700">{monthlyStats.cash.toLocaleString()}원</p>
-                 </div>
-                 <div className="bg-gray-50 p-5 rounded-3xl border-2 border-gray-200 shadow-sm">
-                    <h4 className="text-[10px] font-black text-gray-400 mb-1 uppercase tracking-tighter">카드 누적 ({monthlyStats.cardPercent}%)</h4>
-                    <p className="text-2xl font-black text-gray-700">{monthlyStats.card.toLocaleString()}원</p>
+                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <h4 className="text-[10px] font-semibold text-blue-500 mb-1 uppercase tracking-tighter flex items-center gap-1">하행선 누적 <ArrowDown size={12} className="text-blue-500" style={{transform:'rotate(20deg)'}}/></h4>
+                    <p className="text-xl font-bold text-blue-700">{monthlyStats.ha.toLocaleString()}원</p>
                  </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t-2 border-dashed border-gray-100">
-                 <div className="bg-emerald-50 p-5 rounded-3xl border-2 border-emerald-200 shadow-sm">
-                    <h4 className="text-[10px] font-black text-emerald-400 mb-1 uppercase tracking-tighter">1일 평균 쌀 사용량</h4>
-                    <p className="text-2xl font-black text-emerald-700">{monthlyStats.avgRicePerDay}kg</p>
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                 <div className="bg-white p-4 rounded-xl border border-gray-200">
+                    <h4 className="text-[10px] font-semibold text-gray-400 mb-1 uppercase tracking-tighter">현금 누적 ({monthlyStats.cashPercent}%)</h4>
+                    <p className="text-xl font-bold text-gray-700">{monthlyStats.cash.toLocaleString()}원</p>
                  </div>
-                 <div className="bg-emerald-50 p-5 rounded-3xl border-2 border-emerald-200 shadow-sm">
-                    <h4 className="text-[10px] font-black text-emerald-400 mb-1 uppercase tracking-tighter">누적 쌀 금액 (환산)</h4>
-                    <p className="text-2xl font-black text-emerald-700">{Number(monthlyStats.cumulativeRiceCost).toLocaleString()}원</p>
+                 <div className="bg-white p-4 rounded-xl border border-gray-200">
+                    <h4 className="text-[10px] font-semibold text-gray-400 mb-1 uppercase tracking-tighter">카드 누적 ({monthlyStats.cardPercent}%)</h4>
+                    <p className="text-xl font-bold text-gray-700">{monthlyStats.card.toLocaleString()}원</p>
+                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100">
+                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <h4 className="text-[10px] font-semibold text-gray-500 mb-1 uppercase tracking-tighter">1일 평균 쌀 사용량</h4>
+                    <p className="text-xl font-bold text-gray-800">{monthlyStats.avgRicePerDay}kg</p>
+                 </div>
+                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <h4 className="text-[10px] font-semibold text-gray-500 mb-1 uppercase tracking-tighter">누적 쌀 금액 (환산)</h4>
+                    <p className="text-xl font-bold text-gray-800">{Number(monthlyStats.cumulativeRiceCost).toLocaleString()}원</p>
                  </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t-2 border-dashed border-gray-100">
-                 <div className="bg-purple-50 p-5 rounded-3xl border-2 border-purple-200 shadow-sm">
-                    <h4 className="text-[10px] font-black text-purple-400 mb-1 uppercase tracking-tighter">기대 매출 (쌀 기준)</h4>
-                    <p className="text-2xl font-black text-purple-700">{monthlyStats.expectedSales.toLocaleString()}원</p>
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <h4 className="text-[10px] font-semibold text-gray-500 mb-1 uppercase tracking-tighter">기대 매출 (쌀 기준)</h4>
+                    <p className="text-xl font-bold text-gray-800">{monthlyStats.expectedSales.toLocaleString()}원</p>
                  </div>
-                 <div className="bg-amber-50 p-5 rounded-3xl border-2 border-amber-200 shadow-sm">
-                    <h4 className="text-[10px] font-black text-amber-400 mb-1 uppercase tracking-tighter">로스+시식 환산액</h4>
-                    <p className="text-2xl font-black text-amber-700">{monthlyStats.lossAmount.toLocaleString()}원</p>
+                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <h4 className="text-[10px] font-semibold text-gray-500 mb-1 uppercase tracking-tighter">로스+시식 환산액</h4>
+                    <p className="text-xl font-bold text-gray-800">{monthlyStats.lossAmount.toLocaleString()}원</p>
                  </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap bg-gray-100 p-2 rounded-[32px] border-2 border-gray-200 font-black gap-2">
-              <button onClick={()=>setAdminViewMode('calendar')} className={`flex-1 min-w-[60px] py-4 rounded-2xl text-[13px] font-black transition-all ${adminViewMode==='calendar'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>집계 달력</button>
-              <button onClick={()=>setAdminViewMode('list')} className={`flex-1 min-w-[60px] py-4 rounded-2xl text-[13px] font-black transition-all ${adminViewMode==='list'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>리포트 목록</button>
-              <button onClick={()=>setAdminViewMode('labor')} className={`flex-1 min-w-[60px] py-4 rounded-2xl text-[13px] font-black transition-all ${adminViewMode==='labor'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>근로/급여</button>
-              <button onClick={()=>setAdminViewMode('inventory')} className={`flex-1 min-w-[60px] py-4 rounded-2xl text-[13px] font-black transition-all ${adminViewMode==='inventory'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>재고 관리</button>
-              <button onClick={()=>setAdminViewMode('cost')} className={`flex-1 min-w-[60px] py-4 rounded-2xl text-[13px] font-black transition-all ${adminViewMode==='cost'?'bg-white shadow-xl text-gray-900':'text-gray-500'}`}>비용 관리</button>
+            <div className="flex flex-wrap bg-white p-2 rounded-xl border border-gray-200 shadow-sm gap-1">
+              <button onClick={()=>setAdminViewMode('calendar')} className={`flex-1 min-w-[60px] py-3 rounded-lg text-[13px] font-semibold transition-all ${adminViewMode==='calendar'?'bg-gray-900 text-white shadow-sm':'text-gray-500 hover:bg-gray-50'}`}>집계 달력</button>
+              <button onClick={()=>setAdminViewMode('list')} className={`flex-1 min-w-[60px] py-3 rounded-lg text-[13px] font-semibold transition-all ${adminViewMode==='list'?'bg-gray-900 text-white shadow-sm':'text-gray-500 hover:bg-gray-50'}`}>리포트 목록</button>
+              <button onClick={()=>setAdminViewMode('labor')} className={`flex-1 min-w-[60px] py-3 rounded-lg text-[13px] font-semibold transition-all ${adminViewMode==='labor'?'bg-gray-900 text-white shadow-sm':'text-gray-500 hover:bg-gray-50'}`}>근로/급여</button>
+              <button onClick={()=>setAdminViewMode('inventory')} className={`flex-1 min-w-[60px] py-3 rounded-lg text-[13px] font-semibold transition-all ${adminViewMode==='inventory'?'bg-gray-900 text-white shadow-sm':'text-gray-500 hover:bg-gray-50'}`}>재고 관리</button>
+              <button onClick={()=>setAdminViewMode('cost')} className={`flex-1 min-w-[60px] py-3 rounded-lg text-[13px] font-semibold transition-all ${adminViewMode==='cost'?'bg-gray-900 text-white shadow-sm':'text-gray-500 hover:bg-gray-50'}`}>비용 관리</button>
             </div>
 
             {adminViewMode === 'calendar' && (
-              <div className="space-y-6 font-black">
-                <div className="bg-white p-6 rounded-[40px] border-4 border-gray-900 shadow-xl animate-in fade-in font-black">
-                  <div className="flex justify-between items-center mb-8 px-4">
-                    <button onClick={()=>setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth()-1, 1))} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200"><ChevronLeft size={28} className="text-gray-900"/></button>
-                    <span className="font-black text-3xl text-gray-900">{calendarDate.getFullYear()}년 {calendarDate.getMonth()+1}월</span>
-                    <button onClick={()=>setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth()+1, 1))} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200"><ChevronRight size={28} className="text-gray-900"/></button>
-                  </div>
-                  <p className="text-center text-[10px] font-black text-gray-400 mb-4 uppercase tracking-widest">* 날짜를 클릭하면 휴무일로 설정할 수 있습니다.</p>
-                  <div className="grid grid-cols-7 gap-1 text-center mb-3 text-[12px] font-black text-gray-400 uppercase tracking-widest font-black">
+              <div className="space-y-6">
+                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm animate-in fade-in">
+                  <p className="text-center text-[10px] font-semibold text-gray-400 mb-4 uppercase tracking-widest">* 날짜를 클릭하면 휴무일로 설정할 수 있습니다.</p>
+                  <div className="grid grid-cols-7 gap-1 text-center mb-3 text-[12px] font-semibold text-gray-400 uppercase tracking-widest">
                     {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=><div key={d}>{d}</div>)}
                   </div>
                   <div className="grid grid-cols-7 gap-1">{renderCalendar()}</div>
                   
-                  <div className="mt-8 grid grid-cols-2 gap-4 border-t-2 border-dashed border-gray-100 pt-8 font-black">
-                    <div className="bg-rose-50 p-6 rounded-3xl border-2 border-rose-100 flex flex-col items-center">
-                       <span className="text-[10px] font-black text-rose-400 mb-1 uppercase tracking-widest">총 영업 일수</span>
-                       <span className="text-3xl font-black text-rose-600 font-sans font-black">{monthlyStats.workingDays}일</span>
+                  <div className="mt-6 grid grid-cols-2 gap-3 border-t border-gray-100 pt-6">
+                    <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 flex flex-col items-center">
+                       <span className="text-[10px] font-semibold text-gray-500 mb-1 uppercase tracking-widest">총 영업 일수</span>
+                       <span className="text-2xl font-bold text-gray-900">{monthlyStats.workingDays}일</span>
                     </div>
-                    <div className="bg-gray-50 p-6 rounded-3xl border-2 border-gray-200 flex flex-col items-center">
-                       <span className="text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest">총 휴무 일수</span>
-                       <span className="text-3xl font-black text-gray-600 font-sans font-black">{monthlyStats.holidayCount}일</span>
+                    <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 flex flex-col items-center">
+                       <span className="text-[10px] font-semibold text-gray-500 mb-1 uppercase tracking-widest">총 휴무 일수</span>
+                       <span className="text-2xl font-bold text-gray-900">{monthlyStats.holidayCount}일</span>
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-4 font-black">
-                    <div className="bg-blue-50 p-6 rounded-3xl border-2 border-blue-100 flex flex-col items-center">
-                       <span className="text-[10px] font-black text-blue-400 mb-1 uppercase tracking-widest">월 최고 매출일</span>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 flex flex-col items-center">
+                       <span className="text-[10px] font-semibold text-gray-500 mb-1 uppercase tracking-widest">월 최고 매출일</span>
                        {monthlyStats.maxDay ? (
                          <>
-                           <span className="text-xl font-black text-blue-700 font-sans tracking-tighter">{monthlyStats.maxDay.date.split('-').slice(1).join('/')}</span>
-                           <span className="text-2xl font-black text-blue-600 font-sans">{monthlyStats.maxDay.sales.toLocaleString()}원</span>
+                           <span className="text-sm font-semibold text-gray-700 tracking-tighter">{monthlyStats.maxDay.date.split('-').slice(1).join('/')}</span>
+                           <span className="text-lg font-bold text-gray-900">{monthlyStats.maxDay.sales.toLocaleString()}원</span>
                          </>
                        ) : (
-                         <span className="text-sm font-black text-blue-300 mt-2">데이터 없음</span>
+                         <span className="text-xs text-gray-400 mt-2">데이터 없음</span>
                        )}
                     </div>
-                    <div className="bg-orange-50 p-6 rounded-3xl border-2 border-orange-100 flex flex-col items-center">
-                       <span className="text-[10px] font-black text-orange-400 mb-1 uppercase tracking-widest">월 최저 매출일</span>
+                    <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 flex flex-col items-center">
+                       <span className="text-[10px] font-semibold text-gray-500 mb-1 uppercase tracking-widest">월 최저 매출일</span>
                        {monthlyStats.minDay ? (
                          <>
-                           <span className="text-xl font-black text-orange-700 font-sans tracking-tighter">{monthlyStats.minDay.date.split('-').slice(1).join('/')}</span>
-                           <span className="text-2xl font-black text-orange-600 font-sans">{monthlyStats.minDay.sales.toLocaleString()}원</span>
+                           <span className="text-sm font-semibold text-gray-700 tracking-tighter">{monthlyStats.minDay.date.split('-').slice(1).join('/')}</span>
+                           <span className="text-lg font-bold text-gray-900">{monthlyStats.minDay.sales.toLocaleString()}원</span>
                          </>
                        ) : (
-                         <span className="text-sm font-black text-orange-300 mt-2">데이터 없음</span>
+                         <span className="text-xs text-gray-400 mt-2">데이터 없음</span>
                        )}
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-4 font-black">
-                    <div className="bg-teal-50 p-6 rounded-3xl border-2 border-teal-100 flex flex-col items-center">
-                       <span className="text-[10px] font-black text-teal-400 mb-1 uppercase tracking-widest">일 평균 매출</span>
-                       <span className="text-2xl font-black text-teal-600 font-sans">{monthlyStats.avgDailySales.toLocaleString()}원</span>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 flex flex-col items-center">
+                       <span className="text-[10px] font-semibold text-gray-500 mb-1 uppercase tracking-widest">일 평균 매출</span>
+                       <span className="text-lg font-bold text-gray-900">{monthlyStats.avgDailySales.toLocaleString()}원</span>
                     </div>
-                    <div className="bg-indigo-50 p-6 rounded-3xl border-2 border-indigo-100 flex flex-col items-center">
-                       <span className="text-[10px] font-black text-indigo-400 mb-1 uppercase tracking-widest">목표(190만) 과부족</span>
-                       <span className={`text-2xl font-black font-sans ${monthlyStats.targetDifference >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                    <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 flex flex-col items-center">
+                       <span className="text-[10px] font-semibold text-gray-500 mb-1 uppercase tracking-widest">목표(190만) 과부족</span>
+                       <span className={`text-lg font-bold ${monthlyStats.targetDifference >= 0 ? 'text-gray-900' : 'text-gray-600'}`}>
                          {monthlyStats.targetDifference > 0 ? '+' : ''}{monthlyStats.targetDifference.toLocaleString()}원
                        </span>
                     </div>
@@ -1177,48 +1174,53 @@ export default function App() {
 
                 </div>
 
-                <div className="bg-white p-10 rounded-[56px] border-4 border-gray-900 shadow-2xl space-y-12">
-                   <div className="text-center space-y-4">
-                      <div className="inline-flex items-center gap-3 bg-rose-50 text-rose-600 px-6 py-2 rounded-full border border-rose-200 font-black text-sm uppercase tracking-widest font-black"><TrendingUp size={18}/> 시스템 전체 기간 매출 통계</div>
-                      <h3 className="text-xl font-black text-gray-900">시스템 전체 기간 매출 통계</h3>
+                <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm space-y-8">
+                   <div className="text-center space-y-2">
+                      <div className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-1.5 rounded-full border border-gray-200 font-semibold text-xs uppercase tracking-widest"><TrendingUp size={14}/> 전체 기간 매출 통계</div>
                    </div>
-                   <div className="space-y-6">
-                      <div className="bg-gray-900 p-8 rounded-[40px] text-white flex flex-col items-center justify-center space-y-2 shadow-xl border-4 border-gray-800">
-                         <span className="text-xs font-black opacity-50 uppercase tracking-[0.2em] font-black">총 누적 매출</span>
-                         <span className="text-4xl font-black tracking-tight">{allTimeStats.total.toLocaleString()}</span>
+                   <div className="space-y-4">
+                      <div className="bg-gray-900 p-6 rounded-2xl text-white flex flex-col items-center justify-center space-y-1 shadow-sm border border-gray-800">
+                         <span className="text-[10px] font-semibold opacity-60 uppercase tracking-[0.2em]">총 누적 매출</span>
+                         <span className="text-3xl font-bold tracking-tight">{allTimeStats.total.toLocaleString()}</span>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 font-black font-black">
-                         <div className="bg-rose-600 p-8 rounded-[40px] text-white flex flex-col items-center justify-center space-y-2 shadow-xl border-4 border-rose-500 font-black">
-                            <div className="flex items-center gap-2"><Percent size={14}/><span className="text-xs font-black opacity-70 uppercase tracking-[0.2em]">누적 판매 수수료 (40%)</span></div>
-                            <span className="text-3xl font-black tracking-tight">{allTimeStats.commission.toLocaleString()}</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                         <div className="bg-gray-100 p-6 rounded-2xl text-gray-900 flex flex-col items-center justify-center space-y-1 border border-gray-200">
+                            <div className="flex items-center gap-1.5"><Percent size={12} className="text-gray-500"/><span className="text-[10px] font-semibold text-gray-500 uppercase tracking-[0.1em]">누적 판매 수수료 (40%)</span></div>
+                            <span className="text-2xl font-bold tracking-tight">{allTimeStats.commission.toLocaleString()}</span>
                          </div>
-                         <div className="bg-blue-600 p-8 rounded-[40px] text-white flex flex-col items-center justify-center space-y-2 shadow-xl border-4 border-blue-500 font-black">
-                            <div className="flex items-center gap-2"><PiggyBank size={14}/><span className="text-xs font-black opacity-70 uppercase tracking-[0.2em]">누적 영업이익 (60%)</span></div>
-                            <span className="text-3xl font-black tracking-tight">{allTimeStats.profit.toLocaleString()}</span>
-                         </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-6 font-black">
-                         <div className="bg-white p-8 rounded-[40px] border-4 border-gray-900 flex flex-col items-center justify-center space-y-2 shadow-lg">
-                            <Coins className="text-amber-500" size={32}/>
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-black">누적 현금 매출</span>
-                            <span className="text-xl font-black text-gray-900">{allTimeStats.cash.toLocaleString()}</span>
-                         </div>
-                         <div className="bg-white p-8 rounded-[40px] border-4 border-gray-900 flex flex-col items-center justify-center space-y-2 shadow-lg">
-                            <CreditCard className="text-blue-500" size={32}/>
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-black">누적 카드 매출</span>
-                            <span className="text-xl font-black text-gray-900">{allTimeStats.card.toLocaleString()}</span>
+                         <div className="bg-gray-100 p-6 rounded-2xl text-gray-900 flex flex-col items-center justify-center space-y-1 border border-gray-200">
+                            <div className="flex items-center gap-1.5"><PiggyBank size={12} className="text-gray-500"/><span className="text-[10px] font-semibold text-gray-500 uppercase tracking-[0.1em]">누적 영업이익 (60%)</span></div>
+                            <span className="text-2xl font-bold tracking-tight">{allTimeStats.profit.toLocaleString()}</span>
                          </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-6 font-black">
-                         <div className="bg-red-50 p-8 rounded-[40px] border-4 border-red-200 flex flex-col items-center justify-center space-y-2 shadow-sm font-black">
-                            <MapPin className="text-red-500" size={32}/>
-                            <span className="text-[10px] font-black text-red-300 uppercase tracking-widest font-black">상행선 누적 매출</span>
-                            <span className="text-xl font-black text-red-600">{allTimeStats.sang.toLocaleString()}원</span>
+                      <div className="grid grid-cols-2 gap-4">
+                         <div className="bg-white p-6 rounded-2xl border border-gray-200 flex flex-col items-center justify-center space-y-1 shadow-sm">
+                            <Coins className="text-gray-400 mb-1" size={24}/>
+                            <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-widest">누적 현금 매출</span>
+                            <span className="text-lg font-bold text-gray-900">{allTimeStats.cash.toLocaleString()}</span>
                          </div>
-                         <div className="bg-blue-50 p-8 rounded-[40px] border-4 border-blue-200 flex flex-col items-center justify-center space-y-2 shadow-sm font-black">
-                            <MapPin className="text-blue-500" size={32}/>
-                            <span className="text-[10px] font-black text-blue-300 uppercase tracking-widest font-black">하행선 누적 매출</span>
-                            <span className="text-xl font-black text-blue-600">{allTimeStats.ha.toLocaleString()}원</span>
+                         <div className="bg-white p-6 rounded-2xl border border-gray-200 flex flex-col items-center justify-center space-y-1 shadow-sm">
+                            <CreditCard className="text-gray-400 mb-1" size={24}/>
+                            <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-widest">누적 카드 매출</span>
+                            <span className="text-lg font-bold text-gray-900">{allTimeStats.card.toLocaleString()}</span>
+                         </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                         <div className="bg-red-50 p-6 rounded-2xl border border-red-100 flex flex-col items-center justify-center space-y-1">
+                            <div className="flex items-center gap-1 mb-1">
+                              <MapPin className="text-red-400" size={20}/>
+                              <ArrowUp size={20} className="text-red-500" style={{transform:'rotate(20deg)'}}/>
+                            </div>
+                            <span className="text-[9px] font-semibold text-red-500 uppercase tracking-widest">상행선 누적</span>
+                            <span className="text-lg font-bold text-red-700">{allTimeStats.sang.toLocaleString()}원</span>
+                         </div>
+                         <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex flex-col items-center justify-center space-y-1">
+                            <div className="flex items-center gap-1 mb-1">
+                              <MapPin className="text-blue-400" size={20}/>
+                              <ArrowDown size={20} className="text-blue-500" style={{transform:'rotate(20deg)'}}/>
+                            </div>
+                            <span className="text-[9px] font-semibold text-blue-500 uppercase tracking-widest">하행선 누적</span>
+                            <span className="text-lg font-bold text-blue-700">{allTimeStats.ha.toLocaleString()}원</span>
                          </div>
                       </div>
                    </div>
@@ -1227,226 +1229,232 @@ export default function App() {
             )}
 
             {adminViewMode === 'cost' && (
-              <div className="space-y-6 font-black">
-                 <div className="bg-white p-6 rounded-[40px] border-4 border-gray-900 shadow-xl animate-in fade-in">
-                    <div className="flex justify-between items-center mb-8 px-4">
-                       <button onClick={()=>setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth()-1, 1))} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200"><ChevronLeft size={28} className="text-gray-900"/></button>
-                       <span className="font-black text-3xl text-gray-900">{calendarDate.getFullYear()}년 {calendarDate.getMonth()+1}월</span>
-                       <button onClick={()=>setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth()+1, 1))} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200"><ChevronRight size={28} className="text-gray-900"/></button>
-                    </div>
-                    <div className="grid grid-cols-7 gap-1 text-center mb-3 text-[12px] font-black text-gray-400 uppercase tracking-widest">
+              <div className="space-y-6">
+                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm animate-in fade-in">
+                    <p className="text-center text-[10px] font-semibold text-gray-400 mb-4 uppercase tracking-widest">* 날짜를 클릭하여 상세 비용을 확인 및 등록하세요.</p>
+                    <div className="grid grid-cols-7 gap-1 text-center mb-3 text-[12px] font-semibold text-gray-400 uppercase tracking-widest">
                        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=><div key={d}>{d}</div>)}
                     </div>
                     <div className="grid grid-cols-7 gap-1">{renderCostCalendar()}</div>
                  </div>
 
-                 {/* 월 총 비용 대시보드 (인건비 + 수동비용 통합) */}
-                 <div className="bg-gray-900 p-8 rounded-[40px] text-white shadow-xl flex flex-col items-center justify-center space-y-4 border-4 border-gray-800 animate-in slide-in-from-bottom-4">
-                    <div className="flex items-center gap-2 bg-gray-800 px-4 py-1.5 rounded-full border border-gray-700">
-                       <Wallet size={16} className="text-rose-400"/>
-                       <span className="text-[10px] text-gray-300 uppercase tracking-widest">이번 달 총 발생 비용</span>
-                    </div>
-                    <div className="text-center flex flex-col md:flex-row items-center gap-3">
-                       <span className="text-5xl font-black tracking-tight">{monthlyCosts.grandTotal.toLocaleString()}원</span>
-                       <span className="text-2xl font-black text-rose-400 tracking-tighter bg-rose-500/10 px-3 py-1 rounded-xl">(매출 대비 {monthlyCosts.costPercentage}%)</span>
-                    </div>
-                    <div className="w-full grid grid-cols-2 gap-4 mt-6 border-t-2 border-gray-700 pt-6">
-                       <div className="flex flex-col items-center space-y-1">
-                          <span className="text-[10px] text-gray-400 uppercase">근로/급여 합계 (자동 연동)</span>
-                          <span className="text-xl font-black text-blue-300">{monthlyCosts.totalLabor.toLocaleString()}원</span>
-                       </div>
-                       <div className="flex flex-col items-center space-y-1 border-l-2 border-gray-700">
-                          <span className="text-[10px] text-gray-400 uppercase">기타 수동 비용 합계</span>
-                          <span className="text-xl font-black text-orange-300">{monthlyCosts.totalManual.toLocaleString()}원</span>
-                       </div>
-                    </div>
-                 </div>
-
                  {/* 비용 항목별 비교 분석 패널 */}
-                 <div className="bg-white p-8 rounded-[40px] border-4 border-gray-900 shadow-xl mt-8">
-                    <h3 className="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
-                      <div className="bg-rose-100 p-2 rounded-full"><PieChart className="text-rose-600" size={24}/></div>
-                      비용 항목별 비교 분석 <span className="text-sm font-bold text-gray-400 ml-2">(총 100% 기준)</span>
+                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                    <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                      <PieChart className="text-gray-500" size={20}/>
+                      비용 분석 <span className="text-xs font-semibold text-gray-400 font-normal ml-1">(총 100% 기준)</span>
                     </h3>
-                    <div className="space-y-5">
+                    <div className="space-y-4">
                         {monthlyCosts.categoryBreakdown.map((item, idx) => (
-                            <div key={idx} className="flex flex-col gap-2">
-                                <div className="flex justify-between items-end text-sm font-black text-gray-700">
-                                    <span className="flex items-center gap-2">
-                                      <span className="w-3 h-3 rounded-full bg-gray-900 block"></span>
+                            <div key={idx} className="flex flex-col gap-1.5">
+                                <div className="flex justify-between items-end text-sm text-gray-700">
+                                    <span className="flex items-center gap-2 font-medium">
+                                      <span className="w-2 h-2 rounded-full bg-gray-400 block"></span>
                                       {item.category}
                                     </span>
                                     <div className="text-right">
-                                      <span className="text-lg font-black text-gray-900 block leading-none">{item.amount.toLocaleString()}원</span>
-                                      <span className="text-[10px] text-rose-600 uppercase font-black">{item.percentage}% 비중</span>
+                                      <span className="text-base font-bold text-gray-900 block leading-none">{item.amount.toLocaleString()}원</span>
+                                      <span className="text-[10px] text-gray-500 uppercase font-semibold">{item.percentage}% 비중</span>
                                     </div>
                                 </div>
-                                <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden border border-gray-200">
-                                    <div className="bg-gray-900 h-4 rounded-full transition-all duration-1000 ease-out" style={{ width: `${item.percentage}%` }}></div>
+                                <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                    <div className="bg-gray-900 h-2 rounded-full transition-all duration-1000 ease-out" style={{ width: `${item.percentage}%` }}></div>
                                 </div>
                             </div>
                         ))}
                         {monthlyCosts.categoryBreakdown.length === 0 && (
-                            <div className="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                              <p className="text-gray-400 font-black text-sm">이번 달에 발생한 비용 내역이 없습니다.</p>
+                            <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                              <p className="text-gray-500 font-medium text-sm">이번 달에 발생한 비용 내역이 없습니다.</p>
                             </div>
                         )}
+                    </div>
+                 </div>
+
+                 {/* 월 총 비용 및 순수익 요약 대시보드 */}
+                 <div className="bg-gray-900 p-8 rounded-2xl text-white shadow-md flex flex-col space-y-6 border border-gray-800 animate-in slide-in-from-bottom-4">
+                    <div className="flex flex-col items-center justify-center space-y-2 pb-6 border-b border-gray-800">
+                       <div className="flex items-center gap-2 bg-gray-800 px-4 py-1.5 rounded-full border border-gray-700">
+                          <Wallet size={14} className="text-gray-400"/>
+                          <span className="text-[10px] text-gray-300 uppercase tracking-widest">이번 달 총 발생 비용</span>
+                       </div>
+                       <div className="text-center flex flex-col items-center gap-1">
+                          <span className="text-4xl font-bold tracking-tight">{monthlyCosts.grandTotal.toLocaleString()}원</span>
+                          <span className="text-sm font-medium text-gray-400">(매출 대비 {monthlyCosts.costPercentage}%)</span>
+                       </div>
+                    </div>
+                    
+                    <div className="flex flex-col gap-4">
+                       <div className="flex items-center gap-2">
+                         <TrendingUp size={16} className="text-gray-400" />
+                         <h3 className="text-sm font-semibold text-gray-300">이번 달 예상 영업이익 요약</h3>
+                       </div>
+                       <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
+                          <div className="w-full flex justify-between items-center bg-gray-800 px-4 py-3 rounded-lg border border-gray-700">
+                             <span className="text-xs text-gray-400">매출</span>
+                             <span className="text-base font-bold">{monthlyStats.total.toLocaleString()}원</span>
+                          </div>
+                          <span className="text-gray-600 font-bold">-</span>
+                          <div className="w-full flex justify-between items-center bg-gray-800 px-4 py-3 rounded-lg border border-gray-700">
+                             <span className="text-xs text-gray-400">수수료(40%)</span>
+                             <span className="text-base font-bold">{(monthlyStats.total * 0.4).toLocaleString()}원</span>
+                          </div>
+                          <span className="text-gray-600 font-bold">-</span>
+                          <div className="w-full flex justify-between items-center bg-gray-800 px-4 py-3 rounded-lg border border-gray-700">
+                             <span className="text-xs text-gray-400">비용</span>
+                             <span className="text-base font-bold">{monthlyCosts.grandTotal.toLocaleString()}원</span>
+                          </div>
+                          <span className="text-gray-600 font-bold">=</span>
+                          <div className="w-full flex justify-between items-center bg-indigo-50 text-indigo-900 px-4 py-3 rounded-lg border border-indigo-200">
+                             <span className="text-xs font-bold text-indigo-700">영업이익</span>
+                             <span className="text-lg font-black">{(monthlyStats.total - (monthlyStats.total * 0.4) - monthlyCosts.grandTotal).toLocaleString()}원</span>
+                          </div>
+                       </div>
                     </div>
                  </div>
               </div>
             )}
 
             {adminViewMode === 'labor' && (
-              <div className="space-y-6 animate-in fade-in font-black font-black">
-                 <div className="bg-blue-50 p-6 rounded-[32px] border-2 border-blue-200 shadow-sm space-y-3 font-black">
-                   <h4 className="text-blue-800 text-lg font-black flex items-center gap-2"><AlertCircle size={20}/> 근로 기준 및 4대보험 가입 안내</h4>
-                   <ul className="text-xs text-blue-700 space-y-1.5 list-disc pl-5 leading-relaxed">
+              <div className="space-y-6 animate-in fade-in">
+                 <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+                   <h4 className="text-gray-800 text-sm font-bold flex items-center gap-2"><AlertCircle size={16}/> 근로 기준 및 4대보험 안내</h4>
+                   <ul className="text-[11px] text-gray-600 space-y-1.5 list-disc pl-4 leading-relaxed">
                      <li>매니저가 1일 근무 시 <strong>실 근로시간은 10시간</strong> 기준입니다.</li>
                      <li><strong>주 15시간 이상(한 주에 2일 이상)</strong> 또는 <strong>월 60시간 이상(월 6일 이상)</strong> 근무 시 <strong>4대보험 전면 가입</strong> 대상입니다. (사업주 부담 약 9.65%)</li>
-                     <li>위 조건 미달 시(월 60시간 미만 단시간 근로)에는 <strong>고용보험, 산재보험만 가입</strong>됩니다. (연금/건강 미가입, 사업주 부담 약 2.15%)</li>
-                     <li>예상 인건비는 <strong>1일 급여 + 자동 계산된 해당 보험료 + 1일 식대(9,900원)</strong>가 합산되어 노출됩니다.</li>
+                     <li>위 조건 미달 시에는 <strong>고용보험, 산재보험만 가입</strong>됩니다. (사업주 부담 약 2.15%)</li>
+                     <li>예상 인건비는 <strong>1일 급여 + 보험료 + 식대(9,900원)</strong>가 합산됩니다.</li>
                    </ul>
                  </div>
 
-                 <div className="bg-white p-8 rounded-[48px] border-4 border-gray-900 shadow-2xl space-y-6">
-                    <h3 className="text-xl font-black text-gray-900 border-l-8 border-rose-600 pl-4 py-1">매니저 명단 관리</h3>
-                    <div className="flex gap-3">
+                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+                    <h3 className="text-lg font-bold text-gray-900 border-l-4 border-gray-900 pl-3">매니저 명단 관리</h3>
+                    <div className="flex gap-2">
                        <input 
                          type="text" 
                          value={newManagerName} 
                          onChange={e=>setNewManagerName(e.target.value)} 
-                         className="flex-1 p-5 bg-gray-100 rounded-3xl border-none outline-none font-black text-gray-900 shadow-inner" 
-                         placeholder="새로운 매니저 이름 입력" 
+                         className="flex-1 p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none text-sm text-gray-900" 
+                         placeholder="새로운 매니저 이름" 
                        />
-                       <button onClick={handleAddManager} className="px-8 py-5 bg-gray-900 text-white rounded-3xl font-black flex items-center gap-2 active:scale-95">
-                          <UserPlus size={20}/> 추가
+                       <button onClick={handleAddManager} className="px-5 py-3 bg-gray-900 text-white rounded-xl text-sm font-medium flex items-center gap-1 active:scale-95 transition-transform">
+                          <UserPlus size={16}/> 추가
                        </button>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                        {activeDefaults.map(m => (
-                          <div key={m} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border-2 border-gray-100">
-                             <div className="flex items-center gap-3">
-                                <div className={`w-3 h-3 rounded-full ${getManagerColor(m)} border`}></div>
-                                <span className="font-black text-gray-600">{m} <span className="text-[10px] text-gray-400 ml-1">(기본)</span></span>
+                          <div key={m} className={`flex justify-between items-center p-3 rounded-xl border ${getManagerColor(m)}`}>
+                             <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-current opacity-70"></div>
+                                <span className="font-bold text-sm">{m} <span className="text-[9px] opacity-60 ml-1 font-normal">(기본)</span></span>
                              </div>
-                             <button onClick={()=>handleRemoveDefaultManager(m)} className="p-2 text-gray-300 hover:text-red-500 transition-colors"><UserMinus size={18}/></button>
+                             <button onClick={()=>handleRemoveDefaultManager(m)} className="p-1.5 opacity-50 hover:opacity-100 transition-opacity"><UserMinus size={14}/></button>
                           </div>
                        ))}
                        {dbManagers.map(m => (
-                          <div key={m.id} className="flex justify-between items-center p-4 bg-white rounded-2xl border-2 border-gray-900 shadow-sm">
-                             <div className="flex items-center gap-3">
-                                <div className={`w-3 h-3 rounded-full ${getManagerColor(m.name)} border`}></div>
-                                <span className="font-black text-gray-900">{m.name}</span>
+                          <div key={m.id} className={`flex justify-between items-center p-3 rounded-xl border ${getManagerColor(m.name)}`}>
+                             <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-current opacity-70"></div>
+                                <span className="font-bold text-sm">{m.name}</span>
                              </div>
-                             <button onClick={()=>handleRemoveManager(m.id)} className="p-2 text-gray-300 hover:text-red-500 transition-colors"><UserMinus size={18}/></button>
+                             <button onClick={()=>handleRemoveManager(m.id)} className="p-1.5 opacity-50 hover:opacity-100 transition-opacity"><UserMinus size={14}/></button>
                           </div>
                        ))}
                     </div>
-                    <p className="text-[10px] text-gray-400 italic text-center">* 여기서 추가된 이름은 업무보고 작성 폼과 스케쥴 배정 목록에 자동으로 나타납니다.</p>
                  </div>
 
-                 <div className="bg-white p-10 rounded-[56px] border-4 border-gray-900 shadow-2xl space-y-10 mt-12">
-                    <div className="text-center space-y-4 mb-4">
-                       <div className="inline-flex items-center gap-3 bg-blue-50 text-blue-600 px-6 py-2 rounded-full border border-blue-200 font-black text-sm uppercase tracking-widest font-black"><CalendarDays size={18}/> 이번 달 근무자 스케쥴 관리</div>
-                       <h3 className="text-xl font-black text-gray-900">근무자 스케쥴 관리</h3>
-                    </div>
-                    
-                    <div className="flex justify-between items-center px-4 mb-8 bg-gray-50 p-4 rounded-3xl border-2 border-gray-100">
-                      <button onClick={()=>setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth()-1, 1))} className="p-3 bg-white rounded-full hover:bg-gray-200 shadow-sm border-2 border-gray-200"><ChevronLeft size={24}/></button>
-                      <span className="font-black text-2xl text-gray-900">{calendarDate.getFullYear()}년 {calendarDate.getMonth()+1}월</span>
-                      <button onClick={()=>setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth()+1, 1))} className="p-3 bg-white rounded-full hover:bg-gray-200 shadow-sm border-2 border-gray-200"><ChevronRight size={24}/></button>
+                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-8 mt-6">
+                    <div className="flex items-center gap-2 border-l-4 border-gray-900 pl-3">
+                       <CalendarDays size={18} className="text-gray-600"/>
+                       <h3 className="text-lg font-bold text-gray-900">근무자 스케쥴 관리</h3>
                     </div>
 
-                    <div className="bg-gray-900 p-8 rounded-[40px] text-white shadow-xl space-y-6 relative overflow-hidden mb-8 border-4 border-gray-800">
-                      <div className="relative z-10 text-center space-y-2">
-                        <p className="text-rose-400 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2">
-                           <DollarSign size={16}/> 이번 달 총 예상 인건비
+                    <div className="bg-gray-900 p-6 rounded-2xl text-white shadow-sm space-y-4">
+                      <div className="text-center space-y-1">
+                        <p className="text-gray-400 text-[10px] font-semibold uppercase tracking-widest flex items-center justify-center gap-1">
+                           이번 달 총 예상 인건비
                         </p>
-                        <p className="text-5xl font-black tracking-tight text-white">{scheduleStats.grandTotalLaborCost.toLocaleString()}원</p>
+                        <p className="text-3xl font-bold tracking-tight">{scheduleStats.grandTotalLaborCost.toLocaleString()}원</p>
                       </div>
-                      <div className="relative z-10 grid grid-cols-3 gap-2 sm:gap-4 pt-6 border-t-2 border-gray-700">
+                      <div className="grid grid-cols-3 gap-2 pt-4 border-t border-gray-800">
                         <div className="text-center">
-                          <p className="text-[10px] text-gray-400 mb-1">총 예상 급여</p>
-                          <p className="text-lg sm:text-xl font-black">{scheduleStats.grandTotalWage.toLocaleString()}원</p>
+                          <p className="text-[9px] text-gray-400 mb-0.5">총 예상 급여</p>
+                          <p className="text-sm font-semibold">{scheduleStats.grandTotalWage.toLocaleString()}원</p>
                         </div>
-                        <div className="text-center border-x-2 border-gray-700">
-                          <p className="text-[10px] text-gray-400 mb-1 leading-tight">총 4대보험/고용산재<br/>(사업주 부담분)</p>
-                          <p className="text-lg sm:text-xl font-black">{scheduleStats.grandTotalInsurance.toLocaleString()}원</p>
+                        <div className="text-center border-x border-gray-800">
+                          <p className="text-[9px] text-gray-400 mb-0.5">총 보험료</p>
+                          <p className="text-sm font-semibold">{scheduleStats.grandTotalInsurance.toLocaleString()}원</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-[10px] text-gray-400 mb-1 leading-tight">총 식대<br/>(9,900원/일)</p>
-                          <p className="text-lg sm:text-xl font-black">{scheduleStats.grandTotalMeal.toLocaleString()}원</p>
+                          <p className="text-[9px] text-gray-400 mb-0.5">총 식대</p>
+                          <p className="text-sm font-semibold">{scheduleStats.grandTotalMeal.toLocaleString()}원</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 border-l-8 border-red-600 pl-4 py-1">
-                        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">상행선 스케쥴</h2>
-                      </div>
-                      <div className="bg-white p-4 rounded-[40px] border-4 border-gray-900 shadow-xl">
-                        <div className="grid grid-cols-7 gap-1 text-center mb-3 text-[10px] font-black text-gray-400">
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-bold text-red-700 flex items-center gap-1">상행선 스케쥴 <ArrowUp size={16} className="text-red-500" style={{transform:'rotate(20deg)'}}/></h4>
+                      <div className="bg-red-50 p-3 rounded-xl border border-red-100">
+                        <div className="grid grid-cols-7 gap-1 text-center mb-2 text-[9px] font-semibold text-gray-400">
                           {['SUN','MON','TUE','WED','THU','FRI','SAT'].map(d=><div key={d}>{d}</div>)}
                         </div>
                         <div className="grid grid-cols-7 gap-1">{renderScheduleCalendar('상행선')}</div>
                       </div>
                     </div>
 
-                    <div className="space-y-4 mt-8">
-                      <div className="flex items-center gap-2 border-l-8 border-blue-600 pl-4 py-1">
-                        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">하행선 스케쥴</h2>
-                      </div>
-                      <div className="bg-white p-4 rounded-[40px] border-4 border-gray-900 shadow-xl">
-                        <div className="grid grid-cols-7 gap-1 text-center mb-3 text-[10px] font-black text-gray-400">
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-bold text-blue-700 flex items-center gap-1">하행선 스케쥴 <ArrowDown size={16} className="text-blue-500" style={{transform:'rotate(20deg)'}}/></h4>
+                      <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                        <div className="grid grid-cols-7 gap-1 text-center mb-2 text-[9px] font-semibold text-gray-400">
                           {['SUN','MON','TUE','WED','THU','FRI','SAT'].map(d=><div key={d}>{d}</div>)}
                         </div>
                         <div className="grid grid-cols-7 gap-1">{renderScheduleCalendar('하행선')}</div>
                       </div>
                     </div>
 
-                    <div className="mt-12 space-y-4">
-                      <div className="flex items-center gap-2 border-l-8 border-purple-600 pl-4 py-1">
-                        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">이번 달 통합 근무 일수 및 예상 급여 (인건비 합산)</h2>
-                      </div>
-                      <div className="bg-white p-4 rounded-[40px] border-4 border-gray-900 shadow-xl">
-                        <div className="flex flex-col gap-3">
-                          {Object.entries(scheduleStats.managerMonthlyStats).filter(([_, s]) => s.totalDays > 0).sort((a, b) => b[1].totalDays - a[1].totalDays).length > 0 ? (
-                             Object.entries(scheduleStats.managerMonthlyStats)
-                               .filter(([_, stats]) => stats.totalDays > 0)
-                               .sort((a, b) => b[1].totalDays - a[1].totalDays)
-                               .map(([mgr, stats]) => {
-                                  return (
-                                     <div key={mgr} className={`p-4 rounded-3xl border-2 flex flex-col gap-3 shadow-sm ${getManagerColor(mgr)}`}>
-                                        <div className="flex justify-between items-center border-b border-black/10 pb-2">
-                                          <span className="text-sm font-black">{mgr} 매니저</span>
-                                          <div className="flex items-center gap-1">
-                                             <span className="bg-white/90 px-2 py-1 rounded-lg text-[10px] font-black border border-black/5 shadow-sm">총 {stats.totalDays}일 근무 (상:{stats.sangDays}/하:{stats.haDays})</span>
-                                             {stats.insuranceType === 'FULL' ? (
-                                                <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-[10px] font-black border border-blue-200 shadow-sm">4대보험 (9.65%)</span>
-                                             ) : (
-                                                <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded-lg text-[10px] font-black border border-orange-200 shadow-sm">고용·산재 (2.15%)</span>
-                                             )}
-                                          </div>
+                    <div className="pt-6 border-t border-gray-100 space-y-4">
+                      <h4 className="text-sm font-bold text-gray-800">매니저별 예상 급여 명세</h4>
+                      <div className="flex flex-col gap-3">
+                        {Object.entries(scheduleStats.managerMonthlyStats).filter(([_, s]) => s.totalDays > 0).sort((a, b) => b[1].totalDays - a[1].totalDays).length > 0 ? (
+                           Object.entries(scheduleStats.managerMonthlyStats)
+                             .filter(([_, stats]) => stats.totalDays > 0)
+                             .sort((a, b) => b[1].totalDays - a[1].totalDays)
+                             .map(([mgr, stats]) => {
+                                return (
+                                   <div key={mgr} className="p-4 rounded-xl border border-gray-200 bg-gray-50 flex flex-col gap-3">
+                                      <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                                        <span className={`text-sm font-bold px-2 py-1 rounded-md ${getManagerColor(mgr)}`}>{mgr} 매니저</span>
+                                        <div className="flex items-center gap-1.5">
+                                           <span className="bg-white px-2 py-0.5 rounded text-[9px] font-semibold border border-gray-200 text-gray-600 flex items-center gap-1">
+                                             총 {stats.totalDays}일 (
+                                             <span className="text-red-500 font-bold flex items-center">상:{stats.sangDays}<ArrowUp size={8} style={{transform:'rotate(20deg)'}}/></span> / 
+                                             <span className="text-blue-500 font-bold flex items-center">하:{stats.haDays}<ArrowDown size={8} style={{transform:'rotate(20deg)'}}/></span>
+                                             )
+                                           </span>
+                                           {stats.insuranceType === 'FULL' ? (
+                                              <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-[9px] font-semibold">4대보험 가입</span>
+                                           ) : (
+                                              <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-[9px] font-semibold">고용/산재 가입</span>
+                                           )}
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2 text-xs font-black">
-                                          <div className="bg-white/60 p-2 rounded-xl border border-black/5 flex justify-between"><span>기본 급여</span><span>{stats.totalWage.toLocaleString()}원</span></div>
-                                          <div className="bg-white/60 p-2 rounded-xl border border-black/5 flex justify-between"><span>식대 (일 9.9k)</span><span>{stats.totalMeal.toLocaleString()}원</span></div>
-                                          <div className="bg-white/60 p-2 rounded-xl border border-black/5 flex justify-between col-span-2 text-blue-800">
-                                            <span>{stats.insuranceType === 'FULL' ? '4대보험료 (사업주 9.65%)' : '고용/산재 (사업주 2.15%)'}</span>
-                                            <span>{stats.totalInsurance.toLocaleString()}원</span>
-                                          </div>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                                        <div className="flex justify-between"><span>기본 급여</span><span className="font-semibold text-gray-900">{stats.totalWage.toLocaleString()}원</span></div>
+                                        <div className="flex justify-between"><span>식대 합계</span><span className="font-semibold text-gray-900">{stats.totalMeal.toLocaleString()}원</span></div>
+                                        <div className="flex justify-between col-span-2">
+                                          <span>{stats.insuranceType === 'FULL' ? '사업주 부담 보험료' : '사업주 부담 보험료'}</span>
+                                          <span className="font-semibold text-gray-900">{stats.totalInsurance.toLocaleString()}원</span>
                                         </div>
-                                        <div className="bg-white/90 p-3 rounded-xl border border-black/10 flex justify-between items-center shadow-inner mt-1">
-                                          <span className="text-xs font-black opacity-80">인건비 합계</span>
-                                          <span className="text-lg font-black">{stats.totalCost.toLocaleString()}원</span>
-                                        </div>
-                                     </div>
-                                  );
-                               })
-                          ) : (
-                            <span className="text-xs text-gray-400 font-black px-2">배정된 근무자가 없습니다.</span>
-                          )}
-                        </div>
+                                      </div>
+                                      <div className="bg-white p-2.5 rounded-lg border border-gray-200 flex justify-between items-center mt-1">
+                                        <span className="text-[11px] font-semibold text-gray-500">인건비 총합</span>
+                                        <span className="text-base font-bold text-gray-900">{stats.totalCost.toLocaleString()}원</span>
+                                      </div>
+                                   </div>
+                                );
+                             })
+                        ) : (
+                          <span className="text-xs text-gray-400 px-1">배정된 근무자가 없습니다.</span>
+                        )}
                       </div>
                     </div>
                  </div>
@@ -1454,162 +1462,126 @@ export default function App() {
             )}
 
             {adminViewMode === 'inventory' && (
-              <div className="space-y-6 animate-in fade-in font-black font-black">
-                 <div className="bg-emerald-600 p-8 rounded-[48px] border-4 border-emerald-800 shadow-2xl text-center space-y-3 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-6 opacity-20"><PiggyBank size={100} color="white"/></div>
-                    
-                    <div className="relative z-10 space-y-2 pt-2">
-                       <p className="text-emerald-200 text-xs font-black uppercase tracking-widest">총 재고 지출 누적액</p>
-                       <p className="text-5xl font-black text-white tracking-tight">{currentStock.totalSpent.toLocaleString()}<span className="text-2xl ml-1">원</span></p>
-                       <p className="text-[10px] text-emerald-300">* 하단에 입력된 모든 입출고 내역 금액의 합산입니다.</p>
+              <div className="space-y-6 animate-in fade-in">
+                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                      <h3 className="text-lg font-bold text-gray-900 border-l-4 border-gray-900 pl-3">현재 재고 현황</h3>
+                      <span className="text-[10px] text-gray-400">* 빵끈/비닐은 매출기반 자동 차감</span>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-2 mt-8 pt-6 border-t-2 border-emerald-500/50 relative z-10">
-                       <div className="flex flex-col items-center justify-center">
-                          <span className="text-[10px] text-emerald-300 uppercase tracking-widest mb-1">뻥쌀 지출</span>
-                          <span className="text-xl font-black text-white">{currentStock.riceSpent.toLocaleString()}원</span>
-                       </div>
-                       <div className="flex flex-col items-center justify-center border-x-2 border-emerald-500/50">
-                          <span className="text-[10px] text-emerald-300 uppercase tracking-widest mb-1">빵끈 지출</span>
-                          <span className="text-xl font-black text-white">{currentStock.tieSpent.toLocaleString()}원</span>
-                       </div>
-                       <div className="flex flex-col items-center justify-center">
-                          <span className="text-[10px] text-emerald-300 uppercase tracking-widest mb-1">비닐 지출</span>
-                          <span className="text-xl font-black text-white">{currentStock.bagSpent.toLocaleString()}원</span>
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="bg-white p-8 rounded-[48px] border-4 border-gray-900 shadow-2xl space-y-6">
-                    <h3 className="text-xl font-black text-gray-900 border-l-8 border-rose-600 pl-4 py-1">현재 재고 현황</h3>
-                    <p className="text-[10px] text-gray-400">* 빵끈과 포장비닐은 누적 매출 5,000원당 1개씩 자동 차감되며, 평균은 26년 5월부터 집계됩니다.</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                       <div className="bg-amber-50 p-6 rounded-3xl border-4 border-amber-200 flex flex-col items-center justify-center space-y-2 shadow-sm">
-                          <Box className="text-amber-500 mb-1" size={36}/>
-                          <span className="text-xs font-black text-amber-500 uppercase tracking-widest">뻥쌀 재고</span>
-                          <span className="text-4xl font-black text-amber-700 tracking-tight">{currentStock.riceKg.toLocaleString()}<span className="text-lg">kg</span></span>
-                          <span className="text-sm font-black text-amber-600">약 {(currentStock.riceKg / 20).toFixed(1)}박스</span>
-                          <span className="text-[10px] text-amber-500/80 bg-amber-100 px-3 py-1 rounded-full mt-1">일 평균 {averagesSinceMay2026.rice}kg 사용</span>
-                          <div className="w-full border-t-2 border-amber-200 mt-3 pt-3 text-center flex flex-col gap-1">
-                             <span className="text-[10px] text-amber-600 font-bold uppercase tracking-tighter">이번 달 남은 영업일({remainingDaysThisMonth}일) 필요량</span>
-                             <span className="text-sm font-black text-amber-700">{(averagesSinceMay2026.rice * remainingDaysThisMonth).toFixed(1)}kg <span className="text-xs">(약 {((averagesSinceMay2026.rice * remainingDaysThisMonth)/20).toFixed(1)}박스)</span></span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                       <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-center space-y-1.5">
+                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">뻥쌀 재고</span>
+                          <span className="text-2xl font-bold text-gray-900 tracking-tight">{currentStock.riceKg.toLocaleString()}<span className="text-xs ml-0.5 font-normal text-gray-500">kg</span></span>
+                          <span className="text-[10px] text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">일 평균 {averagesSinceMay2026.rice}kg</span>
+                          <div className="w-full border-t border-gray-200 mt-2 pt-2 text-center flex flex-col">
+                             <span className="text-[9px] text-gray-400 font-semibold uppercase">잔여 영업일({remainingDaysThisMonth}일) 필요량</span>
+                             <span className="text-xs font-bold text-gray-700">{(averagesSinceMay2026.rice * remainingDaysThisMonth).toFixed(1)}kg</span>
                           </div>
                        </div>
-                       <div className="bg-blue-50 p-6 rounded-3xl border-4 border-blue-200 flex flex-col items-center justify-center space-y-2 shadow-sm">
-                          <Package className="text-blue-500 mb-1" size={36}/>
-                          <span className="text-xs font-black text-blue-500 uppercase tracking-widest">빵끈 재고</span>
-                          <span className="text-4xl font-black text-blue-700 tracking-tight">{currentStock.tie.toLocaleString()}<span className="text-lg">개</span></span>
-                          <span className="text-[10px] text-blue-500/80 bg-blue-100 px-3 py-1 rounded-full mt-1">일 평균 {averagesSinceMay2026.tie}개 사용</span>
-                          <div className="w-full border-t-2 border-blue-200 mt-3 pt-3 text-center flex flex-col gap-1">
-                             <span className="text-[10px] text-blue-600 font-bold uppercase tracking-tighter">이번 달 남은 영업일({remainingDaysThisMonth}일) 필요량</span>
-                             <span className="text-sm font-black text-blue-700">{(averagesSinceMay2026.tie * remainingDaysThisMonth).toLocaleString()}개</span>
+                       <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-center space-y-1.5">
+                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">빵끈 재고</span>
+                          <span className="text-2xl font-bold text-gray-900 tracking-tight">{currentStock.tie.toLocaleString()}<span className="text-xs ml-0.5 font-normal text-gray-500">개</span></span>
+                          <span className="text-[10px] text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">일 평균 {averagesSinceMay2026.tie}개</span>
+                          <div className="w-full border-t border-gray-200 mt-2 pt-2 text-center flex flex-col">
+                             <span className="text-[9px] text-gray-400 font-semibold uppercase">잔여 영업일({remainingDaysThisMonth}일) 필요량</span>
+                             <span className="text-xs font-bold text-gray-700">{(averagesSinceMay2026.tie * remainingDaysThisMonth).toLocaleString()}개</span>
                           </div>
                        </div>
-                       <div className="bg-rose-50 p-6 rounded-3xl border-4 border-rose-200 flex flex-col items-center justify-center space-y-2 shadow-sm">
-                          <ShoppingCart className="text-rose-500 mb-1" size={36}/>
-                          <span className="text-xs font-black text-rose-500 uppercase tracking-widest">포장 비닐 재고</span>
-                          <span className="text-4xl font-black text-rose-700 tracking-tight">{currentStock.bag.toLocaleString()}<span className="text-lg">개</span></span>
-                          <span className="text-[10px] text-rose-500/80 bg-rose-100 px-3 py-1 rounded-full mt-1">일 평균 {averagesSinceMay2026.bag}개 사용</span>
-                          <div className="w-full border-t-2 border-rose-200 mt-3 pt-3 text-center flex flex-col gap-1">
-                             <span className="text-[10px] text-rose-600 font-bold uppercase tracking-tighter">이번 달 남은 영업일({remainingDaysThisMonth}일) 필요량</span>
-                             <span className="text-sm font-black text-rose-700">{(averagesSinceMay2026.bag * remainingDaysThisMonth).toLocaleString()}개</span>
+                       <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-center space-y-1.5">
+                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">포장 비닐 재고</span>
+                          <span className="text-2xl font-bold text-gray-900 tracking-tight">{currentStock.bag.toLocaleString()}<span className="text-xs ml-0.5 font-normal text-gray-500">개</span></span>
+                          <span className="text-[10px] text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">일 평균 {averagesSinceMay2026.bag}개</span>
+                          <div className="w-full border-t border-gray-200 mt-2 pt-2 text-center flex flex-col">
+                             <span className="text-[9px] text-gray-400 font-semibold uppercase">잔여 영업일({remainingDaysThisMonth}일) 필요량</span>
+                             <span className="text-xs font-bold text-gray-700">{(averagesSinceMay2026.bag * remainingDaysThisMonth).toLocaleString()}개</span>
                           </div>
                        </div>
                     </div>
                  </div>
 
-                 <div className="bg-white p-8 rounded-[48px] border-4 border-gray-900 shadow-2xl space-y-6">
-                    <h3 className="text-xl font-black text-gray-900 border-l-8 border-gray-900 pl-4 py-1">재고 수동 입출고 반영</h3>
-                    <p className="text-[11px] text-gray-500 bg-gray-50 p-4 rounded-2xl border-2 border-gray-100 leading-relaxed">
-                       * 판매 및 영업으로 인한 재고 차감은 매니저 리포트를 기반으로 <span className="text-rose-600">자동 반영</span>됩니다.<br/>
-                       * 따라서 물건이 <span className="text-blue-600">새로 입고</span>되었거나 특이 사항으로 인한 <span className="text-red-600">재고 조정(출고)</span>이 필요할 때만 작성해 주세요. 금액을 비워두면 0원으로 기록됩니다.
-                    </p>
-                    <div className="space-y-4 pt-2">
-                       <div className="flex flex-col gap-3">
-                          <div className="flex gap-2">
-                            <select value={adjustType} onChange={e=>setAdjustType(e.target.value)} className="w-1/3 p-5 bg-gray-100 rounded-3xl border-none outline-none font-black text-gray-900 shadow-inner text-sm">
-                               <option value="rice">뻥쌀 (kg)</option>
-                               <option value="tie">빵끈 (개)</option>
-                               <option value="bag">포장 비닐 (개)</option>
-                            </select>
-                            <input type="number" value={adjustAmount} onChange={e=>setAdjustAmount(e.target.value)} placeholder="수량 입력" className="w-2/3 p-5 bg-gray-100 rounded-3xl border-none outline-none font-black text-gray-900 text-right shadow-inner focus:ring-4 ring-gray-200 text-xl" />
-                          </div>
-                          <div className="w-full">
-                            <input type="text" value={formatComma(adjustPrice)} onChange={e=>setAdjustPrice(parseComma(e.target.value))} placeholder="단가 또는 총 금액 입력 (선택사항, 원)" className="w-full p-5 bg-emerald-50 rounded-3xl border-none outline-none font-black text-emerald-900 text-right shadow-inner focus:ring-4 ring-emerald-200 text-lg placeholder:text-emerald-300" />
-                          </div>
+                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+                    <h3 className="text-lg font-bold text-gray-900 border-l-4 border-gray-900 pl-3">수동 입출고 기록</h3>
+                    <div className="flex flex-col gap-2">
+                       <div className="flex gap-2">
+                         <select value={adjustType} onChange={e=>setAdjustType(e.target.value)} className="w-1/3 p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm outline-none text-gray-800">
+                            <option value="rice">뻥쌀 (kg)</option>
+                            <option value="tie">빵끈 (개)</option>
+                            <option value="bag">포장 비닐 (개)</option>
+                         </select>
+                         <input type="number" value={adjustAmount} onChange={e=>setAdjustAmount(e.target.value)} placeholder="수량" className="w-2/3 p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none text-right text-gray-900 focus:ring-2 ring-gray-200" />
                        </div>
-                       <div className="flex gap-3 pt-2">
-                          <button onClick={()=>handleAdjustInventory(true)} className="flex-1 py-5 bg-blue-600 text-white rounded-3xl font-black shadow-lg active:scale-95 transition-all text-base border-b-4 border-blue-800 flex items-center justify-center gap-2"><PlusCircle size={20}/> 입고 (추가)</button>
-                          <button onClick={()=>handleAdjustInventory(false)} className="flex-1 py-5 bg-red-600 text-white rounded-3xl font-black shadow-lg active:scale-95 transition-all text-base border-b-4 border-red-800 flex items-center justify-center gap-2"><MinusCircle size={20}/> 출고 (차감)</button>
-                       </div>
+                       <input type="text" value={formatComma(adjustPrice)} onChange={e=>setAdjustPrice(parseComma(e.target.value))} placeholder="비용(금액) 입력 (선택, 원)" className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none text-right text-gray-900 text-sm focus:ring-2 ring-gray-200" />
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                       <button onClick={()=>handleAdjustInventory(true)} className="flex-1 py-3 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-1"><PlusCircle size={16}/> 입고</button>
+                       <button onClick={()=>handleAdjustInventory(false)} className="flex-1 py-3 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-1"><MinusCircle size={16}/> 출고</button>
                     </div>
                  </div>
 
-                 <div className="space-y-4 pt-6">
-                    <div className="flex items-center gap-2 mb-4 px-2">
-                       <History className="text-gray-900" size={24}/>
-                       <h3 className="text-xl font-black text-gray-900">재고 입출고 상세 내역</h3>
+                 <div className="space-y-3 pt-4">
+                    <div className="flex items-center gap-2 mb-2 px-1">
+                       <History className="text-gray-600" size={18}/>
+                       <h3 className="text-sm font-bold text-gray-800">상세 내역</h3>
                     </div>
                     {inventoryLogs.length === 0 ? (
-                       <p className="text-center text-gray-400 py-10 font-black text-sm bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">기록된 입출고 내역이 없습니다.</p>
+                       <p className="text-center text-gray-400 py-6 text-xs bg-white rounded-xl border border-gray-200">기록이 없습니다.</p>
                     ) : (
                        inventoryLogs.map(log => (
-                          <div key={log.id} className="bg-white p-6 rounded-[36px] border-4 border-gray-900 shadow-md flex flex-col animate-in slide-in-from-bottom-2">
+                          <div key={log.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col">
                              {editLogId === log.id ? (
-                                <div className="space-y-4 bg-gray-50 p-5 rounded-2xl border-2 border-gray-200 shadow-inner">
-                                   <div className="flex justify-between items-center mb-2">
-                                     <span className="text-xs font-black text-gray-500">내역 수정</span>
-                                     <span className="text-[10px] text-gray-400">{log.date}</span>
+                                <div className="space-y-3">
+                                   <div className="flex justify-between items-center">
+                                     <span className="text-[10px] font-semibold text-gray-500">내역 수정</span>
+                                     <span className="text-[9px] text-gray-400">{log.date}</span>
                                    </div>
-                                   <div className="grid grid-cols-2 gap-3">
-                                      <select value={editLogData.type} onChange={e=>setEditLogData({...editLogData, type: e.target.value})} className="p-3 bg-white rounded-xl border-none font-black text-sm text-gray-900 shadow-sm">
+                                   <div className="grid grid-cols-2 gap-2">
+                                      <select value={editLogData.type} onChange={e=>setEditLogData({...editLogData, type: e.target.value})} className="p-2 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-800">
                                          <option value="rice">뻥쌀</option>
                                          <option value="tie">빵끈</option>
                                          <option value="bag">포장 비닐</option>
                                       </select>
-                                      <select value={editLogData.action} onChange={e=>setEditLogData({...editLogData, action: e.target.value})} className="p-3 bg-white rounded-xl border-none font-black text-sm text-gray-900 shadow-sm">
+                                      <select value={editLogData.action} onChange={e=>setEditLogData({...editLogData, action: e.target.value})} className="p-2 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-800">
                                          <option value="add">입고(+)</option>
                                          <option value="remove">출고(-)</option>
                                       </select>
-                                      <div className="col-span-2 flex gap-3">
-                                         <input type="number" value={editLogData.amount} onChange={e=>setEditLogData({...editLogData, amount: e.target.value})} className="flex-1 p-3 bg-white rounded-xl border-none font-black text-right text-gray-900 shadow-sm" placeholder="수량" />
-                                         <input type="text" value={formatComma(editLogData.priceStr)} onChange={e=>setEditLogData({...editLogData, priceStr: parseComma(e.target.value)})} className="flex-1 p-3 bg-emerald-50 rounded-xl border-none font-black text-right text-emerald-900 shadow-sm" placeholder="금액" />
+                                      <div className="col-span-2 flex gap-2">
+                                         <input type="number" value={editLogData.amount} onChange={e=>setEditLogData({...editLogData, amount: e.target.value})} className="flex-1 p-2 bg-gray-50 rounded-lg border border-gray-200 text-right text-xs" placeholder="수량" />
+                                         <input type="text" value={formatComma(editLogData.priceStr)} onChange={e=>setEditLogData({...editLogData, priceStr: parseComma(e.target.value)})} className="flex-1 p-2 bg-gray-50 rounded-lg border border-gray-200 text-right text-xs" placeholder="금액" />
                                       </div>
                                    </div>
-                                   <div className="flex gap-2 pt-2">
-                                      <button onClick={saveLogEdit} className="flex-1 bg-green-600 text-white py-3 rounded-xl text-sm font-black shadow-md"><Save size={16} className="inline mr-1"/>저장</button>
-                                      <button onClick={()=>{setEditLogId(null); setEditLogData(null);}} className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-xl text-sm font-black">취소</button>
+                                   <div className="flex gap-2">
+                                      <button onClick={saveLogEdit} className="flex-1 bg-gray-800 text-white py-2 rounded-lg text-xs font-semibold">저장</button>
+                                      <button onClick={()=>{setEditLogId(null); setEditLogData(null);}} className="flex-1 bg-white border border-gray-200 text-gray-600 py-2 rounded-lg text-xs font-semibold">취소</button>
                                    </div>
                                 </div>
                              ) : (
                                 <>
-                                   <div className="flex justify-between items-start border-b-2 border-gray-100 pb-4 mb-4">
-                                      <div>
-                                         <span className={`px-3 py-1 rounded-full text-[10px] font-black mr-2 ${log.action === 'add' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
+                                   <div className="flex justify-between items-start border-b border-gray-100 pb-2 mb-2">
+                                      <div className="flex items-center">
+                                         <span className={`px-2 py-0.5 rounded text-[9px] font-semibold mr-2 border ${log.action === 'add' ? 'bg-gray-50 border-gray-300 text-gray-700' : 'bg-white border-gray-200 text-gray-500'}`}>
                                             {log.action === 'add' ? '입고' : '출고'}
                                          </span>
-                                         <span className="font-black text-lg text-gray-900">{inventoryTypeNames[log.type]}</span>
+                                         <span className="font-semibold text-sm text-gray-800">{inventoryTypeNames[log.type]}</span>
                                       </div>
                                       <div className="text-right">
-                                         <span className="text-[10px] text-gray-400 block">{log.date}</span>
-                                         <span className="text-[10px] text-gray-400 block">{formatTime(log.timestamp)}</span>
+                                         <span className="text-[9px] text-gray-400 block">{log.date}</span>
                                       </div>
                                    </div>
-                                   <div className="flex justify-between items-end mb-4 px-1">
-                                      <div className="space-y-1">
-                                         <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest block">수량</span>
-                                         <span className={`text-2xl font-black ${log.action === 'add' ? 'text-blue-600' : 'text-red-600'}`}>
-                                            {log.action === 'add' ? '+' : '-'}{log.amount.toLocaleString()} <span className="text-sm">{log.type === 'rice' ? 'kg' : '개'}</span>
+                                   <div className="flex justify-between items-end mb-3 px-1">
+                                      <div>
+                                         <span className="text-[9px] text-gray-400 font-semibold uppercase block">수량</span>
+                                         <span className={`text-lg font-bold ${log.action === 'add' ? 'text-gray-900' : 'text-gray-600'}`}>
+                                            {log.action === 'add' ? '+' : '-'}{log.amount.toLocaleString()} <span className="text-[10px] font-normal">{log.type === 'rice' ? 'kg' : '개'}</span>
                                          </span>
                                       </div>
-                                      <div className="space-y-1 text-right">
-                                         <span className="text-[10px] text-emerald-600/70 font-black uppercase tracking-widest block">비용/금액</span>
-                                         <span className="text-xl font-black text-emerald-600">{Number(log.price || 0).toLocaleString()}원</span>
+                                      <div className="text-right">
+                                         <span className="text-[9px] text-gray-400 font-semibold uppercase block">금액</span>
+                                         <span className="text-sm font-bold text-gray-800">{Number(log.price || 0).toLocaleString()}원</span>
                                       </div>
                                    </div>
-                                   <div className="flex gap-2 font-black">
-                                      <button onClick={()=>startEditLog(log)} className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-2xl text-xs font-black active:scale-95 transition-transform flex items-center justify-center gap-1"><Edit2 size={14}/> 수정</button>
-                                      <button onClick={()=>setDeleteConfirmId({ id: log.id, col: 'inventoryLogs' })} className="flex-1 bg-red-50 text-red-600 py-3 rounded-2xl text-xs font-black active:scale-95 transition-transform flex items-center justify-center gap-1"><Trash2 size={14}/> 삭제</button>
+                                   <div className="flex gap-2">
+                                      <button onClick={()=>startEditLog(log)} className="flex-1 bg-gray-50 text-gray-600 py-2 rounded-lg border border-gray-200 text-[11px] font-semibold active:scale-95 flex items-center justify-center gap-1"><Edit2 size={12}/> 수정</button>
+                                      <button onClick={()=>setDeleteConfirmId({ id: log.id, col: 'inventoryLogs' })} className="flex-1 bg-white border border-gray-200 text-gray-500 py-2 rounded-lg text-[11px] font-semibold active:scale-95 flex items-center justify-center gap-1"><Trash2 size={12}/> 삭제</button>
                                    </div>
                                 </>
                              )}
@@ -1621,134 +1593,114 @@ export default function App() {
             )}
 
             {adminViewMode === 'list' && (
-              <div className="space-y-6 font-black">
-                <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-                  <button onClick={()=>setFilterType('ALL')} className={`px-5 py-3 rounded-2xl border-4 font-black text-sm whitespace-nowrap transition-all ${filterType==='ALL' ? 'bg-gray-900 text-white border-gray-900 shadow-lg' : 'bg-white border-gray-100 text-gray-400'}`}>전체보기</button>
+              <div className="space-y-4">
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  <button onClick={()=>setFilterType('ALL')} className={`px-4 py-2 rounded-xl border text-xs font-semibold whitespace-nowrap transition-all ${filterType==='ALL' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white border-gray-200 text-gray-500'}`}>전체</button>
                   {allManagers.map(name => (
-                    <button key={name} onClick={()=>{setFilterType('WORKER');setFilterValue(name)}} className={`px-5 py-3 rounded-2xl border-4 font-black text-sm whitespace-nowrap transition-all ${filterType==='WORKER' && filterValue===name ? 'bg-gray-900 text-white border-gray-900 shadow-lg' : 'bg-white border-gray-100 text-gray-400'}`}>{name}</button>
+                    <button key={name} onClick={()=>{setFilterType('WORKER');setFilterValue(name)}} className={`px-4 py-2 rounded-xl border text-xs font-semibold whitespace-nowrap transition-all ${filterType==='WORKER' && filterValue===name ? 'bg-gray-900 text-white border-gray-900' : 'bg-white border-gray-200 text-gray-500'}`}>{name}</button>
                   ))}
                 </div>
                 {filteredReports.map(r => (
-                  <div key={r.id} className="p-8 rounded-[40px] border-4 shadow-2xl bg-white border-gray-900 animate-in slide-in-from-bottom-4 font-black">
-                    <div className="flex justify-between items-start mb-6 font-black font-black">
+                  <div key={r.id} className="p-5 rounded-2xl border border-gray-200 shadow-sm bg-white animate-in slide-in-from-bottom-4">
+                    <div className="flex justify-between items-start mb-4">
                       <div>
-                        <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-widest font-sans font-black font-black font-black">{new Date(r.timestamp).toLocaleString('ko-KR')}</p>
-                        <p className="text-2xl text-gray-900 tracking-tighter">{r.date} | {r.location}</p>
+                        <p className="text-[10px] text-gray-400 mb-0.5">{new Date(r.timestamp).toLocaleString('ko-KR')}</p>
+                        <p className="text-lg font-bold text-gray-900 flex items-center gap-1.5">
+                           {r.date} | {r.location}
+                           {r.location === '상행선' ? <ArrowUp size={18} className="text-red-500" style={{transform:'rotate(20deg)'}}/> : <ArrowDown size={18} className="text-blue-500" style={{transform:'rotate(20deg)'}}/>}
+                        </p>
                       </div>
-                      <span className={`px-5 py-2.5 rounded-full text-xs text-white shadow-md ${r.location==='상행선'?'bg-red-600':'bg-blue-600'}`}>{r.worker}</span>
+                      <span className={`px-3 py-1 rounded border text-[10px] font-bold ${getManagerColor(r.worker)}`}>{r.worker}</span>
                     </div>
-                    <div className="flex justify-between items-end border-t-4 border-gray-50 pt-6 font-black font-sans font-black">
-                       <span className="text-xs text-gray-500 uppercase tracking-widest font-sans font-black">매출 합계</span>
-                       <span className="text-4xl text-gray-900 tracking-tight">{Number(r.totalSales || 0).toLocaleString()}원</span>
+                    <div className="flex justify-between items-end border-t border-gray-100 pt-4">
+                       <span className="text-[11px] text-gray-500 font-semibold">합계</span>
+                       <span className="text-2xl font-bold text-gray-900 tracking-tight">{Number(r.totalSales || 0).toLocaleString()}원</span>
                     </div>
-                    <button onClick={()=>setExpandedReportId(expandedReportId === r.id ? null : r.id)} className="w-full mt-6 py-5 bg-gray-900 text-white rounded-[24px] text-base font-black active:scale-95 flex items-center justify-center gap-2 shadow-xl font-black">
-                      {expandedReportId === r.id ? <ChevronUp/> : <ChevronDown/>} {expandedReportId === r.id ? '상세 닫기' : '상세 보기'}
+                    <button onClick={()=>setExpandedReportId(expandedReportId === r.id ? null : r.id)} className="w-full mt-4 py-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold flex items-center justify-center gap-1 hover:bg-gray-100 transition-colors">
+                      {expandedReportId === r.id ? <ChevronUp size={16}/> : <ChevronDown size={16}/>} {expandedReportId === r.id ? '닫기' : '상세'}
                     </button>
                     {expandedReportId === r.id && (
-                      <div className="mt-8 space-y-6 pt-8 border-t-4 border-dashed border-gray-100 animate-in fade-in zoom-in-95 font-black">
+                      <div className="mt-4 space-y-4 pt-4 border-t border-dashed border-gray-200 animate-in fade-in">
                          {editReportId === r.id ? (
-                           <div className="space-y-4 bg-gray-50 p-6 rounded-3xl border-2 border-gray-200 shadow-inner font-black font-black">
-                             <p className="text-xs text-rose-600 uppercase mb-4 font-black">리포트 수정 모드</p>
-                             <div className="grid grid-cols-2 gap-4 font-black">
+                           <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                             <p className="text-[10px] text-gray-500 font-bold">수정 모드</p>
+                             <div className="grid grid-cols-2 gap-2">
                                <div className="space-y-1">
-                                 <label className="text-[10px] text-gray-400 font-black">현금 매출</label>
-                                 <input type="text" value={formatComma(editData.sales?.cash || '')} onChange={e=>setEditData({...editData, sales:{...editData.sales, cash:parseComma(e.target.value)}})} className="w-full p-3 bg-white rounded-xl border-none font-black text-gray-900 text-right font-black" />
+                                 <label className="text-[9px] text-gray-500 font-semibold">현금</label>
+                                 <input type="text" value={formatComma(editData.sales?.cash || '')} onChange={e=>setEditData({...editData, sales:{...editData.sales, cash:parseComma(e.target.value)}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
                                </div>
-                               <div className="space-y-1 font-black">
-                                 <label className="text-[10px] text-gray-400 font-black">카드 매출</label>
-                                 <input type="text" value={formatComma(editData.sales?.card || '')} onChange={e=>setEditData({...editData, sales:{...editData.sales, card:parseComma(e.target.value)}})} className="w-full p-3 bg-white rounded-xl border-none font-black text-gray-900 text-right font-black" />
-                               </div>
-                             </div>
-                             <div className="space-y-1 font-black mt-2">
-                               <label className="text-[10px] text-gray-400 font-black">포스기 종료 전 마지막 매출</label>
-                               <input type="text" value={formatComma(editData.sales?.finalPos || '')} onChange={e=>setEditData({...editData, sales:{...editData.sales, finalPos:parseComma(e.target.value)}})} className="w-full p-3 bg-purple-50 rounded-xl border-none font-black text-purple-900 text-right font-black shadow-inner" placeholder="수치 입력" />
-                             </div>
-                             <div className="grid grid-cols-2 gap-4 font-black mt-4">
-                               <div className="space-y-1 font-black">
-                                 <label className="text-[10px] text-gray-400 font-black">사용한 쌀 (kg)</label>
-                                 <input type="number" value={editData.inventory?.usedRice || ''} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, usedRice:e.target.value}})} className="w-full p-3 bg-white rounded-xl border-none font-black text-gray-900 text-right font-black" />
-                               </div>
-                               <div className="space-y-1 font-black">
-                                 <label className="text-[10px] text-gray-400 font-black">재고 (개)</label>
-                                 <input type="number" value={editData.inventory?.stockCount || ''} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, stockCount:e.target.value}})} className="w-full p-3 bg-white rounded-xl border-none font-black text-gray-900 text-right font-black" />
+                               <div className="space-y-1">
+                                 <label className="text-[9px] text-gray-500 font-semibold">카드</label>
+                                 <input type="text" value={formatComma(editData.sales?.card || '')} onChange={e=>setEditData({...editData, sales:{...editData.sales, card:parseComma(e.target.value)}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
                                </div>
                              </div>
-                             <div className="space-y-1 font-black mt-4">
-                               <label className="text-[10px] text-gray-400 font-black">특이사항</label>
-                               <textarea value={editData.notes || ''} onChange={e=>setEditData({...editData, notes:e.target.value})} className="w-full p-3 bg-white rounded-xl border-none font-black text-gray-900 font-black" rows={3} />
+                             <div className="space-y-1">
+                               <label className="text-[9px] text-gray-500 font-semibold">종료 매출</label>
+                               <input type="text" value={formatComma(editData.sales?.finalPos || '')} onChange={e=>setEditData({...editData, sales:{...editData.sales, finalPos:parseComma(e.target.value)}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
+                             </div>
+                             <div className="grid grid-cols-2 gap-2 mt-2">
+                               <div className="space-y-1">
+                                 <label className="text-[9px] text-gray-500 font-semibold">사용쌀(kg)</label>
+                                 <input type="number" value={editData.inventory?.usedRice || ''} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, usedRice:e.target.value}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
+                               </div>
+                               <div className="space-y-1">
+                                 <label className="text-[9px] text-gray-500 font-semibold">남아있는 뻥튀기 (봉투)</label>
+                                 <input type="number" value={editData.inventory?.stockCount || ''} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, stockCount:e.target.value}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
+                               </div>
+                             </div>
+                             <div className="space-y-1 mt-2">
+                               <label className="text-[9px] text-gray-500 font-semibold">개선이 필요한 부분</label>
+                               <textarea value={editData.notes || ''} onChange={e=>setEditData({...editData, notes:e.target.value})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-xs" rows={2} />
                              </div>
                              <div className="flex gap-2 pt-2">
-                               <button onClick={saveEdit} className="flex-1 py-4 bg-green-600 text-white rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg font-black"><Save size={18}/> 저장하기</button>
-                               <button onClick={()=>{setEditReportId(null);setEditData(null)}} className="px-6 py-4 bg-gray-300 text-gray-700 rounded-2xl font-black font-black">취소</button>
+                               <button onClick={saveEdit} className="flex-1 py-2 bg-gray-900 text-white rounded-lg text-xs font-semibold">저장</button>
+                               <button onClick={()=>{setEditReportId(null);setEditData(null)}} className="px-4 py-2 bg-white border border-gray-300 text-gray-600 rounded-lg text-xs font-semibold">취소</button>
                              </div>
                            </div>
                          ) : (
-                           <div className="space-y-6 font-black font-black">
-                             <div className="grid grid-cols-2 gap-4 font-black">
-                                <div className="bg-gray-50 p-4 rounded-2xl border-2 border-gray-100 font-black">
-                                  <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-widest font-sans font-black">매출 정보</p>
-                                  <div className="flex justify-between items-center mb-1 text-gray-900 font-black">
-                                    <span className="text-xs text-gray-500">현금</span>
-                                    <span>{Number(r.sales?.cash || 0).toLocaleString()}원</span>
-                                  </div>
-                                  <div className="flex justify-between items-center text-gray-900 font-black">
-                                    <span className="text-xs text-gray-500">카드</span>
-                                    <span>{Number(r.sales?.card || 0).toLocaleString()}원</span>
-                                  </div>
+                           <div className="space-y-4">
+                             <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                                  <p className="text-[9px] text-gray-400 mb-1 font-semibold">매출 정보</p>
+                                  <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>현금</span><span className="font-medium">{Number(r.sales?.cash || 0).toLocaleString()}원</span></div>
+                                  <div className="flex justify-between text-xs text-gray-800"><span>카드</span><span className="font-medium">{Number(r.sales?.card || 0).toLocaleString()}원</span></div>
                                 </div>
-                                <div className="bg-gray-50 p-4 rounded-2xl border-2 border-gray-100 font-black">
-                                  <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-widest font-sans font-black">재고 정보</p>
-                                  <div className="flex justify-between items-center mb-1 text-gray-900 font-black">
-                                    <span className="text-xs text-gray-500 font-black">쌀 사용량</span>
-                                    <span>{r.inventory?.usedRice || 0}kg</span>
-                                  </div>
-                                  <div className="flex justify-between items-center text-gray-900 font-black">
-                                    <span className="text-xs text-gray-500 font-black">재고 수량</span>
-                                    <span>{r.inventory?.stockCount || 0}개</span>
-                                  </div>
+                                <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                                  <p className="text-[9px] text-gray-400 mb-1 font-semibold">재고 정보</p>
+                                  <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>쌀 사용량</span><span className="font-medium">{r.inventory?.usedRice || 0}kg</span></div>
+                                  <div className="flex justify-between text-xs text-gray-800"><span>남아있는 뻥튀기 (봉투)</span><span className="font-medium">{r.inventory?.stockCount || 0}봉투</span></div>
                                 </div>
                              </div>
 
-                             <div className="bg-purple-50 p-4 rounded-2xl border-2 border-purple-100 font-black mt-4">
-                                <p className="text-[10px] text-purple-400 mb-2 uppercase tracking-widest font-sans font-black">포스기 마감 정보</p>
-                                <div className="flex justify-between items-center text-purple-900 font-black">
-                                  <span className="text-xs text-purple-600">종료 전 마지막 매출</span>
-                                  <span>{Number(r.sales?.finalPos || 0).toLocaleString()}원</span>
-                                </div>
+                             <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                                <p className="text-[9px] text-gray-400 mb-1 font-semibold">포스기 마감 정보</p>
+                                <div className="flex justify-between text-xs text-gray-800"><span>종료 전 마지막 매출</span><span className="font-medium">{Number(r.sales?.finalPos || 0).toLocaleString()}원</span></div>
                              </div>
 
-                             <div className="bg-gray-50 p-4 rounded-2xl border-2 border-gray-100 font-black mt-4">
-                                <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-widest font-sans font-black">익일 자재 상태</p>
-                                <div className="flex justify-between items-center mb-1 text-gray-900">
-                                  <span className="text-xs text-gray-500">뻥쌀</span>
-                                  <span className={r.inventory?.riceStatus === '부족' ? 'text-red-600' : 'text-blue-600'}>{r.inventory?.riceStatus || '미기입'}</span>
-                                </div>
-                                <div className="flex justify-between items-center mb-1 text-gray-900">
-                                  <span className="text-xs text-gray-500">포장 비닐</span>
-                                  <span className={r.inventory?.bagStatus === '부족' ? 'text-red-600' : 'text-blue-600'}>{r.inventory?.bagStatus || '미기입'}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-gray-900">
-                                  <span className="text-xs text-gray-500">빵끈</span>
-                                  <span className={r.inventory?.tieStatus === '부족' ? 'text-red-600' : 'text-blue-600'}>{r.inventory?.tieStatus || '미기입'}</span>
-                                </div>
+                             <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                                <p className="text-[9px] text-gray-400 mb-1 font-semibold">익일 자재 상태</p>
+                                <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>뻥쌀</span><span className={r.inventory?.riceStatus === '부족' ? 'text-gray-900 font-bold' : 'text-gray-500'}>{r.inventory?.riceStatus || '미기입'}</span></div>
+                                <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>포장 비닐</span><span className={r.inventory?.bagStatus === '부족' ? 'text-gray-900 font-bold' : 'text-gray-500'}>{r.inventory?.bagStatus || '미기입'}</span></div>
+                                <div className="flex justify-between text-xs text-gray-800"><span>빵끈</span><span className={r.inventory?.tieStatus === '부족' ? 'text-gray-900 font-bold' : 'text-gray-500'}>{r.inventory?.tieStatus || '미기입'}</span></div>
                              </div>
 
-                             <div className="bg-gray-900 p-6 rounded-3xl text-white italic leading-relaxed shadow-xl font-black">
-                               <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-widest not-italic font-sans font-black">매니저 전달사항</p>
-                               "{r.notes || '전달사항 없음'}"
+                             <div className="bg-white border border-gray-200 p-4 rounded-xl text-gray-700 text-sm">
+                               <p className="text-[9px] text-gray-400 mb-1 font-semibold">개선이 필요한 부분</p>
+                               "{r.notes || '없음'}"
                              </div>
-                             <div className="grid grid-cols-5 gap-2 font-black">
+                             
+                             <div className="grid grid-cols-5 gap-1.5">
                                {r.photos && Object.entries(r.photos).map(([key, url]) => (
                                  url && (
-                                   <div key={key} onClick={()=>setSelectedPhoto({url, name: photoNames[key], date: r.date, worker: r.worker})} className="aspect-square bg-gray-100 rounded-xl overflow-hidden border-2 border-gray-200 cursor-pointer hover:border-rose-500 transition-all font-black">
+                                   <div key={key} onClick={()=>setSelectedPhoto({url, name: photoNames[key], date: r.date, worker: r.worker})} className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200 cursor-pointer">
                                       <img src={url} className="w-full h-full object-cover" />
                                    </div>
                                  )
                                ))}
                              </div>
-                             <div className="flex gap-4 pt-4 font-black">
-                                <button onClick={()=>startEdit(r)} className="flex-1 py-5 bg-blue-600 text-white rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"><Edit2 size={20}/> 리포트 수정</button>
-                                <button onClick={()=>setDeleteConfirmId({ id: r.id, col: 'reports' })} className="flex-1 py-5 bg-red-600 text-white rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"><Trash2 size={20}/> 리포트 삭제</button>
+                             <div className="flex gap-2 pt-2">
+                                <button onClick={()=>startEdit(r)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 hover:bg-gray-50"><Edit2 size={14}/> 수정</button>
+                                <button onClick={()=>setDeleteConfirmId({ id: r.id, col: 'reports' })} className="flex-1 py-3 bg-white border border-gray-200 text-gray-500 hover:text-gray-900 rounded-xl text-xs font-semibold flex items-center justify-center gap-1"><Trash2 size={14}/> 삭제</button>
                              </div>
                            </div>
                          )}
@@ -1760,99 +1712,99 @@ export default function App() {
             )}
           </div>
 
-          {/* 관리자 모드에서만 나타나는 스케쥴 배정 모달 */}
+          {/* 스케쥴 배정 모달 */}
           {view === 'admin' && scheduleSelection && (
-            <div className="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-8 backdrop-blur-md animate-in fade-in duration-300">
-              <div className="bg-white p-10 rounded-[56px] w-full max-w-sm border-[10px] border-gray-900 shadow-2xl animate-in zoom-in-95 font-black">
-                <div className="flex justify-between items-center mb-8">
+            <div className="fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-white p-8 rounded-3xl w-full max-w-sm border border-gray-200 shadow-xl animate-in zoom-in-95">
+                <div className="flex justify-between items-center mb-6">
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest">{scheduleSelection.location}</p>
-                    <h3 className="text-3xl font-black text-gray-900">{scheduleSelection.date}</h3>
+                    <p className="text-[10px] text-gray-500 uppercase font-semibold">{scheduleSelection.location}</p>
+                    <h3 className="text-xl font-bold text-gray-900">{scheduleSelection.date}</h3>
                   </div>
-                  <button onClick={()=>setScheduleSelection(null)} className="p-3 bg-gray-100 rounded-2xl"><X size={24}/></button>
+                  <button onClick={()=>setScheduleSelection(null)} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"><X size={20}/></button>
                 </div>
                 
                 <div className="mb-6 space-y-2">
-                  <label className="text-xs text-gray-500 font-black uppercase tracking-widest pl-2">해당일 근무 임금 (선택)</label>
+                  <label className="text-[11px] text-gray-500 font-semibold pl-1">해당일 근무 임금</label>
                   <input
                     type="text"
                     value={formatComma(scheduleWage)}
                     onChange={e => setScheduleWage(parseComma(e.target.value))}
-                    className="w-full p-4 bg-gray-100 rounded-2xl border-none outline-none font-black text-right text-gray-900 text-xl shadow-inner focus:ring-4 ring-blue-200"
+                    className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none text-right text-gray-900 focus:ring-2 ring-gray-200"
                     placeholder="0 원"
                   />
-                  <div className="flex gap-2 mt-2">
-                    <button onClick={() => setScheduleWage('120000')} className="flex-1 py-3 bg-gray-50 hover:bg-gray-200 border-2 border-gray-200 rounded-xl text-sm font-black text-gray-600 transition-colors">12만원</button>
-                    <button onClick={() => setScheduleWage('130000')} className="flex-1 py-3 bg-gray-50 hover:bg-gray-200 border-2 border-gray-200 rounded-xl text-sm font-black text-gray-600 transition-colors">13만원</button>
-                    <button onClick={() => setScheduleWage('140000')} className="flex-1 py-3 bg-gray-50 hover:bg-gray-200 border-2 border-gray-200 rounded-xl text-sm font-black text-gray-600 transition-colors">14만원</button>
+                  <div className="flex gap-1.5 mt-2">
+                    <button onClick={() => setScheduleWage('120000')} className="flex-1 py-2 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg text-xs font-semibold text-gray-600">12만원</button>
+                    <button onClick={() => setScheduleWage('130000')} className="flex-1 py-2 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg text-xs font-semibold text-gray-600">13만원</button>
+                    <button onClick={() => setScheduleWage('140000')} className="flex-1 py-2 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg text-xs font-semibold text-gray-600">14만원</button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="grid grid-cols-2 gap-2 mb-6">
                   {allManagers.map(m => (
-                    <button key={m} onClick={() => assignWorkerToSchedule(m)} className={`py-5 rounded-3xl border-4 transition-all font-black text-sm ${getManagerColor(m)}`}>
+                    <button key={m} onClick={() => assignWorkerToSchedule(m)} className={`py-3 rounded-xl border font-semibold text-xs transition-colors hover:opacity-80 ${getManagerColor(m)}`}>
                       {m} 배정
                     </button>
                   ))}
                 </div>
 
-                <button onClick={() => assignWorkerToSchedule('CLEAR')} className="w-full py-5 bg-red-50 text-red-600 rounded-3xl font-black border-4 border-red-100 flex items-center justify-center gap-2 shadow-sm">
-                  <Trash2 size={20}/> 배정 삭제
+                <button onClick={() => assignWorkerToSchedule('CLEAR')} className="w-full py-4 bg-white text-gray-500 hover:text-gray-900 rounded-xl font-semibold border border-gray-200 flex items-center justify-center gap-1.5 transition-colors">
+                  <Trash2 size={16}/> 배정 삭제
                 </button>
               </div>
             </div>
           )}
 
-          {/* 관리자 모드 - 비용 관리 상세 모달 */}
+          {/* 비용 상세 모달 */}
           {view === 'admin' && costSelectionDate && (
-            <div className="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-6 backdrop-blur-md animate-in fade-in duration-300">
-              <div className="bg-white p-8 rounded-[48px] w-full max-w-md border-[8px] border-gray-900 shadow-2xl animate-in zoom-in-95 font-black flex flex-col max-h-[90vh]">
-                <div className="flex justify-between items-center mb-6">
+            <div className="fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-white p-6 rounded-3xl w-full max-w-sm border border-gray-200 shadow-xl animate-in zoom-in-95 flex flex-col max-h-[85vh]">
+                <div className="flex justify-between items-center mb-5">
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest">비용 상세 등록 및 내역</p>
-                    <h3 className="text-2xl font-black text-gray-900">{costSelectionDate}</h3>
+                    <p className="text-[10px] text-gray-500 font-semibold">비용 상세 내역</p>
+                    <h3 className="text-xl font-bold text-gray-900">{costSelectionDate}</h3>
                   </div>
-                  <button onClick={()=>setCostSelectionDate(null)} className="p-3 bg-gray-100 rounded-2xl"><X size={24}/></button>
+                  <button onClick={()=>setCostSelectionDate(null)} className="p-2 bg-gray-100 rounded-lg"><X size={20}/></button>
                 </div>
 
-                <div className="overflow-y-auto pr-2 space-y-6">
-                   <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-100 flex justify-between items-center">
-                      <span className="text-xs font-black text-blue-800 flex items-center gap-2"><CalendarDays size={14}/> 자동 연동 인건비</span>
-                      <span className="text-lg font-black text-blue-700">{formatComma(scheduleStats.dailyLaborCosts[costSelectionDate] || 0)}원</span>
+                <div className="overflow-y-auto pr-1 space-y-5">
+                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex justify-between items-center">
+                      <span className="text-[11px] font-semibold text-gray-600 flex items-center gap-1.5"><CalendarDays size={14}/> 인건비 (자동)</span>
+                      <span className="text-base font-bold text-gray-800">{formatComma(scheduleStats.dailyLaborCosts[costSelectionDate] || 0)}원</span>
                    </div>
 
                    <div className="space-y-2">
-                      <h4 className="text-xs text-gray-400 uppercase tracking-widest pl-2">등록된 수동 비용 목록</h4>
+                      <h4 className="text-[10px] text-gray-400 font-semibold pl-1">수동 추가 내역</h4>
                       {(monthlyCosts.manualByDate[costSelectionDate] || []).length === 0 ? (
-                        <p className="text-xs text-gray-400 bg-gray-50 p-4 rounded-2xl text-center border-2 border-dashed border-gray-200">등록된 수동 비용이 없습니다.</p>
+                        <p className="text-[11px] text-gray-400 bg-white p-3 rounded-xl text-center border border-dashed border-gray-200">수동 비용이 없습니다.</p>
                       ) : (
                         (monthlyCosts.manualByDate[costSelectionDate] || []).map(c => (
-                           <div key={c.id} className="bg-white p-4 rounded-2xl border-2 border-gray-200 flex justify-between items-center shadow-sm">
+                           <div key={c.id} className="bg-white p-3 rounded-xl border border-gray-200 flex justify-between items-center">
                               <div>
-                                <span className="text-[10px] bg-gray-100 px-2 py-1 rounded-md text-gray-600 mr-2 border border-gray-200">{c.category}</span>
-                                <span className="text-sm font-black text-gray-900">{c.description}</span>
+                                <span className="text-[9px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 mr-1.5 border border-gray-200">{c.category}</span>
+                                <span className="text-xs font-semibold text-gray-800">{c.description}</span>
                               </div>
-                              <div className="flex items-center gap-3">
-                                <span className="text-base font-black text-rose-600">{formatComma(c.amount)}원</span>
-                                <button onClick={()=>setDeleteConfirmId({id: c.id, col: 'costs'})} className="text-gray-300 hover:text-red-500"><Trash2 size={16}/></button>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-gray-900">{formatComma(c.amount)}</span>
+                                <button onClick={()=>setDeleteConfirmId({id: c.id, col: 'costs'})} className="text-gray-400 hover:text-gray-900"><Trash2 size={14}/></button>
                               </div>
                            </div>
                         ))
                       )}
                    </div>
 
-                   <div className="bg-gray-50 p-5 rounded-3xl border-2 border-gray-200 space-y-3">
-                      <h4 className="text-xs text-gray-600 font-black mb-2 flex items-center gap-2"><Plus size={14}/> 새로운 비용 추가</h4>
-                      <div className="flex flex-col gap-2">
-                         <select value={costForm.category} onChange={e=>setCostForm({...costForm, category: e.target.value})} className="w-full p-4 bg-white rounded-xl border-none font-black text-sm text-gray-900 shadow-sm outline-none focus:ring-2 ring-gray-200">
+                   <div className="bg-white p-4 rounded-xl border border-gray-200 space-y-2.5">
+                      <h4 className="text-[11px] text-gray-700 font-bold mb-1 flex items-center gap-1.5"><Plus size={12}/> 항목 추가</h4>
+                      <div className="flex gap-2">
+                         <select value={costForm.category} onChange={e=>setCostForm({...costForm, category: e.target.value})} className="w-2/5 p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-800 outline-none">
                             {COST_CATEGORIES.map(cat => (
                               <option key={cat} value={cat}>{cat}</option>
                             ))}
                          </select>
-                         <input type="text" value={formatComma(costForm.amount)} onChange={e=>setCostForm({...costForm, amount: parseComma(e.target.value)})} placeholder="금액 입력" className="w-full p-4 bg-white rounded-xl border-none font-black text-right text-gray-900 shadow-sm outline-none focus:ring-2 ring-gray-200 text-lg" />
+                         <input type="text" value={formatComma(costForm.amount)} onChange={e=>setCostForm({...costForm, amount: parseComma(e.target.value)})} placeholder="금액" className="w-3/5 p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-sm font-bold text-right text-gray-900 outline-none" />
                       </div>
-                      <input type="text" value={costForm.description} onChange={e=>setCostForm({...costForm, description: e.target.value})} placeholder="비용 내용 설명 (예: 종량제 봉투 구매)" className="w-full p-4 bg-white rounded-xl border-none font-black text-sm text-gray-900 shadow-sm outline-none focus:ring-2 ring-gray-200" />
-                      <button onClick={handleAddCost} className="w-full py-4 bg-gray-900 text-white rounded-xl font-black mt-2 flex items-center justify-center gap-2 active:scale-95 transition-transform"><Plus size={18}/> 상세 비용 추가하기</button>
+                      <input type="text" value={costForm.description} onChange={e=>setCostForm({...costForm, description: e.target.value})} placeholder="내용 설명" className="w-full p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-800 outline-none" />
+                      <button onClick={handleAddCost} className="w-full py-3 bg-gray-900 text-white rounded-lg text-xs font-bold mt-1 active:scale-95 transition-transform">추가하기</button>
                    </div>
                 </div>
               </div>
@@ -1864,54 +1816,54 @@ export default function App() {
 
     if (view === 'qna') {
       return (
-        <div className="max-w-md mx-auto bg-white min-h-screen pb-40 font-sans animate-in fade-in font-black">
-          <header className="bg-white p-6 border-b-4 border-gray-900 flex justify-between items-center sticky top-0 z-20 shadow-md">
-            <button onClick={() => setIsMenuOpen(true)} className="p-3 bg-gray-100 rounded-2xl active:scale-90 font-black"><Menu size={24}/></button>
-            <h1 className="font-black text-gray-900 text-xl tracking-tight">질문과 답변 (Q&A)</h1>
-            <div className="w-10"></div>
+        <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-40 font-sans">
+          <header className="bg-white p-5 border-b border-gray-200 flex justify-between items-center sticky top-0 z-20">
+            <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100"><Menu size={20}/></button>
+            <h1 className="font-bold text-gray-900 text-lg">질문과 답변 (Q&A)</h1>
+            <div className="w-8"></div>
           </header>
-          <div className="p-4 space-y-6 font-black">
-            <div className="bg-white p-6 rounded-[36px] border-4 border-gray-900 shadow-xl space-y-4">
-              <h2 className="text-sm font-black text-rose-600 border-l-8 border-rose-600 pl-3 uppercase tracking-widest font-black">새로운 질문 남기기</h2>
-              <div className="bg-gray-50 rounded-2xl border-2 border-gray-100 p-2 flex flex-col gap-2 shadow-inner">
-                <select value={qnaAuthor} onChange={e=>setQnaAuthor(e.target.value)} className="w-full p-3 bg-white rounded-xl border-none outline-none font-black text-gray-900 shadow-sm text-sm">
+          
+          <div className="p-4 space-y-5">
+            <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+              <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">새로운 질문</h2>
+              <div className="bg-gray-50 rounded-xl border border-gray-200 p-2 flex flex-col gap-2">
+                <select value={qnaAuthor} onChange={e=>setQnaAuthor(e.target.value)} className="w-full p-2 bg-white rounded-lg border border-gray-200 outline-none text-xs font-semibold text-gray-700">
                   {allManagers.map(m => <option key={m} value={m}>{m} 매니저</option>)}
                 </select>
-                <textarea value={qnaQuestion} onChange={e=>setQnaQuestion(e.target.value)} className="w-full bg-transparent p-3 font-black text-gray-900 border-none outline-none" rows={3} placeholder="궁금한 점을 자유롭게 남겨주세요... (예: 포장 비닐은 어디에 있나요?)"/>
+                <textarea value={qnaQuestion} onChange={e=>setQnaQuestion(e.target.value)} className="w-full bg-transparent p-2 text-sm text-gray-900 border-none outline-none" rows={3} placeholder="궁금한 점을 남겨주세요..."/>
               </div>
-              <button onClick={submitQna} className="w-full py-5 bg-rose-600 text-white rounded-2xl font-black text-xl shadow-lg active:scale-95 transition-all">질문 등록하기</button>
+              <button onClick={submitQna} className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-semibold text-sm active:scale-95 transition-all">질문 등록</button>
             </div>
             
-            <div className="space-y-4 font-black">
+            <div className="space-y-3">
                {qnas.map(q => (
-                 <div key={q.id} className="bg-white p-6 rounded-[32px] border-4 border-gray-900 shadow-md animate-in slide-in-from-bottom-2 font-black">
-                    <div className="flex justify-between items-center mb-4">
+                 <div key={q.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm animate-in slide-in-from-bottom-2">
+                    <div className="flex justify-between items-center mb-3">
                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-100">{q.author}</span>
-                          <span className="text-[10px] font-black text-gray-400 flex items-center gap-1"><Clock size={10}/> {formatTime(q.timestamp)}</span>
+                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border ${getManagerColor(q.author)}`}>{q.author}</span>
+                          <span className="text-[10px] text-gray-400 flex items-center gap-1"><Clock size={10}/> {formatTime(q.timestamp)}</span>
                        </div>
-                       {isAdmin && <button onClick={() => setDeleteConfirmId({ id: q.id, col: 'qna' })} className="text-[10px] font-black text-red-500">삭제</button>}
+                       {isAdmin && <button onClick={() => setDeleteConfirmId({ id: q.id, col: 'qna' })} className="text-[10px] font-semibold text-gray-400 hover:text-gray-900">삭제</button>}
                     </div>
-                    <p className="font-black text-gray-900 text-lg whitespace-pre-wrap leading-relaxed px-1">{q.question}</p>
+                    <p className="font-medium text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">{q.question}</p>
                     
-                    {/* 답변 영역 */}
-                    <div className="mt-5 pt-5 border-t-2 border-dashed border-gray-100">
+                    <div className="mt-4 pt-4 border-t border-gray-100">
                       {q.answer ? (
-                        <div className="bg-blue-50 p-5 rounded-2xl border-2 border-blue-100 shadow-inner">
-                          <p className="text-[11px] font-black text-blue-600 mb-2 flex items-center gap-1 uppercase tracking-widest"><CheckCircle2 size={14}/> 답변 완료</p>
-                          <p className="font-black text-blue-900 whitespace-pre-wrap text-base">{q.answer}</p>
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                          <p className="text-[10px] font-bold text-gray-600 mb-1.5 flex items-center gap-1"><CheckCircle2 size={12}/> 답변 완료</p>
+                          <p className="font-medium text-gray-800 whitespace-pre-wrap text-sm">{q.answer}</p>
                         </div>
                       ) : (
                         qnaReplyId === q.id ? (
-                          <div className="space-y-3 bg-gray-50 p-4 rounded-2xl border-2 border-gray-200">
-                            <textarea value={qnaReplyContent} onChange={e=>setQnaReplyContent(e.target.value)} className="w-full bg-white rounded-xl p-4 font-black text-sm text-gray-900 border-none outline-none shadow-inner focus:ring-2 ring-blue-300" rows={3} placeholder="답변 내용을 입력하세요..."/>
+                          <div className="space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                            <textarea value={qnaReplyContent} onChange={e=>setQnaReplyContent(e.target.value)} className="w-full bg-white rounded-lg p-3 text-xs text-gray-900 border border-gray-200 outline-none focus:ring-1 ring-gray-400" rows={2} placeholder="답변을 입력하세요..."/>
                             <div className="flex gap-2">
-                               <button onClick={()=>submitQnaReply(q.id)} className="flex-1 bg-blue-600 text-white py-3 rounded-xl text-sm font-black shadow-md">답변 등록</button>
-                               <button onClick={()=>setQnaReplyId(null)} className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-xl text-sm font-black">취소</button>
+                               <button onClick={()=>submitQnaReply(q.id)} className="flex-1 bg-gray-800 text-white py-2 rounded-lg text-xs font-semibold">등록</button>
+                               <button onClick={()=>setQnaReplyId(null)} className="flex-1 bg-white border border-gray-200 text-gray-600 py-2 rounded-lg text-xs font-semibold">취소</button>
                             </div>
                           </div>
                         ) : (
-                          <button onClick={()=>{setQnaReplyId(q.id); setQnaReplyContent('');}} className="w-full py-4 bg-gray-100 text-gray-600 rounded-2xl text-sm font-black hover:bg-gray-200 border-2 border-gray-200 transition-colors">답변 남기기</button>
+                          <button onClick={()=>{setQnaReplyId(q.id); setQnaReplyContent('');}} className="w-full py-3 bg-white text-gray-500 rounded-xl text-xs font-semibold border border-gray-200 hover:bg-gray-50 transition-colors">답변 남기기</button>
                         )
                       )}
                     </div>
@@ -1932,43 +1884,42 @@ export default function App() {
       const progress = Math.round((checkedCount / manualItems.length) * 100);
 
       return (
-        <div className="max-w-md mx-auto bg-white min-h-screen pb-40 font-sans animate-in fade-in font-black">
-          <header className="bg-white p-6 border-b-4 border-gray-900 flex justify-between items-center sticky top-0 z-20 shadow-md">
-            <button onClick={() => setIsMenuOpen(true)} className="p-3 bg-gray-100 rounded-2xl active:scale-90 font-black transition-all"><Menu size={24}/></button>
-            <h1 className="font-black text-gray-900 text-xl tracking-tight">하트뻥튀기 (처인휴게소)</h1>
-            <div className="w-10"></div>
+        <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-40 font-sans">
+          <header className="bg-white p-5 border-b border-gray-200 flex justify-between items-center sticky top-0 z-20 shadow-sm">
+            <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"><Menu size={20}/></button>
+            <h1 className="font-bold text-gray-900 text-lg">하트뻥튀기 매뉴얼</h1>
+            <div className="w-8"></div>
           </header>
-          <div className="p-4 space-y-6">
-            <div className="bg-white p-6 rounded-[44px] border-4 border-gray-900 shadow-xl space-y-6 animate-in slide-in-from-top-4">
-              <div className="flex justify-between items-end font-black font-black">
-                <h2 className="text-sm text-rose-600 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">
+          <div className="p-4 space-y-4">
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5 animate-in slide-in-from-top-4">
+              <div className="flex justify-between items-end">
+                <h2 className="text-sm font-bold text-gray-900 border-l-4 border-gray-900 pl-2">
                   {isOpen ? '오픈 매뉴얼' : '마감 매뉴얼'}
                 </h2>
-                <span className="text-3xl font-sans font-black">{progress}%</span>
+                <span className="text-xl font-bold text-gray-800">{progress}%</span>
               </div>
-              <div className="w-full h-6 bg-gray-100 rounded-full border-2 border-gray-900 overflow-hidden shadow-inner font-black">
-                <div className="h-full bg-rose-600 transition-all duration-500 ease-out font-black" style={{ width: `${progress}%` }} />
+              <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-gray-800 transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
               </div>
-              <div className="bg-rose-50 p-5 rounded-3xl border-2 border-rose-200">
-                <p className="text-sm font-black text-rose-800 leading-relaxed text-center italic font-black">
-                  {isOpen ? '"적혀있는 순서대로 오픈하기를 권장드립니다."' : '"깨끗한 매장을 위해 마감 수칙을 꼭 지켜주세요. 오늘도 수고하셨습니다."'}
-                </p>
-              </div>
+              <p className="text-xs text-gray-500 leading-relaxed text-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                {isOpen ? '적혀있는 순서대로 꼼꼼히 오픈해주세요.' : '깨끗한 매장을 위해 마감 수칙을 꼭 지켜주세요. 수고하셨습니다.'}
+              </p>
             </div>
-            <div className="space-y-3 font-black font-black">
+            
+            <div className="space-y-2.5">
               {manualItems.map((item) => (
                 <button 
                   key={item.id}
                   onClick={() => toggleFn(item.id)}
-                  className={`w-full flex items-center gap-5 p-5 rounded-3xl border-4 transition-all duration-300 transform active:scale-[0.98] ${checks[item.id] ? 'bg-rose-50 border-rose-600 shadow-xl' : 'bg-white border-gray-100 shadow-lg'} font-black`}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 transform active:scale-[0.98] ${checks[item.id] ? 'bg-gray-50 border-gray-300' : 'bg-white border-gray-200 shadow-sm'}`}
                 >
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-md flex-shrink-0 ${checks[item.id] ? 'bg-rose-600 text-white' : 'bg-gray-100'} font-black`}>
-                    {checks[item.id] ? <CheckCircle2 size={28}/> : item.icon}
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${checks[item.id] ? 'bg-gray-800 text-white' : 'bg-gray-100'}`}>
+                    {checks[item.id] ? <CheckCircle2 size={20}/> : item.icon}
                   </div>
-                  <span className={`flex-1 text-left font-black text-base leading-tight ${checks[item.id] ? 'text-rose-700 line-through opacity-60' : 'text-gray-900'} font-black`}>
+                  <span className={`flex-1 text-left font-medium text-sm leading-snug ${checks[item.id] ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
                     {item.title}
                   </span>
-                  {!checks[item.id] && <Circle size={28} className="text-gray-200 flex-shrink-0 font-black"/>}
+                  {!checks[item.id] && <Circle size={24} className="text-gray-200 flex-shrink-0"/>}
                 </button>
               ))}
             </div>
@@ -1978,160 +1929,163 @@ export default function App() {
     }
 
     return (
-      <div className="max-w-md mx-auto bg-white min-h-screen pb-20 font-sans font-black">
-        <header className="bg-white p-6 border-b-4 border-gray-900 sticky top-0 z-20 flex justify-between items-center shadow-md font-black">
-          <button onClick={() => setIsMenuOpen(true)} className="p-3 bg-gray-100 rounded-2xl active:scale-90 font-black"><Menu size={24}/></button>
-          <h1 className="font-black text-gray-900 text-lg sm:text-xl flex items-center gap-1 sm:gap-2 tracking-tight font-black font-black">❤️ 하트뻥튀기 (처인휴게소)</h1>
-          <div className="w-10"></div>
+      <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-20 font-sans">
+        <header className="bg-white p-5 border-b border-gray-200 sticky top-0 z-20 flex justify-between items-center shadow-sm">
+          <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100"><Menu size={20}/></button>
+          <h1 className="font-bold text-gray-900 text-lg flex items-center gap-1 tracking-tight">❤️ 하트뻥튀기</h1>
+          <div className="w-8"></div>
         </header>
 
-        <div className="p-4 space-y-8 animate-in slide-in-from-bottom-4 duration-700 font-black font-black">
-          <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-[28px] border-2 border-gray-900 mt-2 shadow-inner font-black">
-             <div className="flex-1 flex flex-col font-black">
-                <span className="text-[10px] text-gray-400 uppercase tracking-tighter mb-0.5 font-sans font-black">오늘 날짜</span>
-                <input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="text-base text-gray-900 bg-transparent border-none p-0 focus:ring-0 cursor-pointer font-black" />
+        <div className="p-4 space-y-5 animate-in slide-in-from-bottom-4 duration-700">
+          <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+             <div className="flex-1 flex flex-col">
+                <span className="text-[10px] font-semibold text-gray-500 mb-0.5">보고 일자</span>
+                <input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="text-sm font-bold text-gray-900 bg-transparent border-none p-0 focus:ring-0 cursor-pointer" />
              </div>
-             <div className="flex gap-3">
+             <div className="flex gap-2">
                 <div className="flex flex-col items-center">
-                   <span className="text-[9px] text-gray-400 mb-1 font-sans font-black">상행선</span>
-                   <span className={`text-[10px] px-3 py-1 rounded-full border-2 transition-all duration-500 font-black ${dailyStatus.상행선 === '제출완료' ? 'bg-green-600 text-white border-green-600 shadow-md' : 'bg-white text-gray-300 border-gray-200'}`}>{dailyStatus.상행선}</span>
+                   <span className="text-[9px] text-gray-400 mb-1 font-semibold flex items-center gap-0.5">상행 <ArrowUp size={10} className="text-red-500" style={{ transform: 'rotate(20deg)' }}/></span>
+                   <span className={`text-[9px] px-2 py-0.5 rounded border transition-all ${dailyStatus.상행선 === '제출완료' ? 'bg-red-600 text-white border-red-600' : 'bg-gray-50 text-gray-400 border-gray-200'}`}>{dailyStatus.상행선}</span>
                 </div>
                 <div className="flex flex-col items-center">
-                   <span className="text-[9px] text-gray-400 mb-1 font-sans font-black">하행선</span>
-                   <span className={`text-[10px] px-3 py-1 rounded-full border-2 transition-all duration-500 font-black ${dailyStatus.하행선 === '제출완료' ? 'bg-green-600 text-white border-green-600 shadow-md' : 'bg-white text-gray-300 border-gray-200'}`}>{dailyStatus.하행선}</span>
+                   <span className="text-[9px] text-gray-400 mb-1 font-semibold flex items-center gap-0.5">하행 <ArrowDown size={10} className="text-blue-500" style={{ transform: 'rotate(20deg)' }}/></span>
+                   <span className={`text-[9px] px-2 py-0.5 rounded border transition-all ${dailyStatus.하행선 === '제출완료' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 text-gray-400 border-gray-200'}`}>{dailyStatus.하행선}</span>
                 </div>
              </div>
           </div>
 
-          <section className="bg-white p-6 rounded-[44px] border-4 border-gray-900 shadow-2xl space-y-6 font-black">
-            <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">1. 기본 정보 및 매출</h2>
-            <div className="space-y-6 pt-2 font-black">
-               <div className="flex flex-col gap-4 font-black">
-                  <label className="text-lg text-gray-900 font-black font-black">근무 매니저</label>
-                  <div className="grid grid-cols-3 gap-2 font-black font-black">
+          <section className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+            <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">1. 기본 정보 및 매출</h2>
+            <div className="space-y-5 pt-1">
+               <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-gray-600">근무 매니저</label>
+                  <div className="grid grid-cols-3 gap-2">
                     {allManagers.map(m => (
                       <button 
                         key={m} 
                         onClick={() => setFormData({...formData, worker: m})} 
-                        className={`py-4 rounded-2xl text-sm font-black border-4 transition-all active:scale-95 ${formData.worker === m ? 'bg-gray-900 border-gray-900 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-400'}`}
+                        className={`py-2.5 rounded-lg text-xs font-medium border transition-all active:scale-95 ${formData.worker === m ? 'bg-gray-900 border-gray-900 text-white' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
                       >
                         {m}
                       </button>
                     ))}
                   </div>
                </div>
-               <div className="flex justify-between items-center font-black">
-                  <label className="text-lg text-gray-900 font-black">영업 위치</label>
-                  <div className="flex gap-3 font-black">
+               <div className="flex justify-between items-center">
+                  <label className="text-xs font-semibold text-gray-600">영업 위치</label>
+                  <div className="flex gap-2">
                     {['상행선','하행선'].map(l=>(
-                      <button key={l} onClick={()=>setFormData({...formData, location:l})} className={`px-7 py-4 rounded-2xl text-base font-black border-4 transition-all duration-300 active:scale-90 shadow-sm ${formData.location === l ? (l === '상행선' ? 'bg-red-600 border-red-600 text-white shadow-xl' : 'bg-blue-600 border-blue-600 text-white shadow-xl') : 'bg-white border-gray-100 text-gray-300'} font-black`}>{l}</button>
+                      <button key={l} onClick={()=>setFormData({...formData, location:l})} className={`px-5 py-2 rounded-lg text-xs font-medium border transition-all active:scale-95 flex items-center gap-1.5 ${formData.location === l ? (l === '상행선' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700') : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
+                         {l} {l === '상행선' ? <ArrowUp size={14} className={formData.location === l ? 'text-red-600' : 'text-gray-400'} style={{transform:'rotate(20deg)'}}/> : <ArrowDown size={14} className={formData.location === l ? 'text-blue-600' : 'text-gray-400'} style={{transform:'rotate(20deg)'}}/>}
+                      </button>
                     ))}
                   </div>
                </div>
             </div>
-            <div className="space-y-4 pt-8 border-t-2 border-dashed border-gray-100 font-black font-black">
-              <div className="grid grid-cols-2 gap-4 font-black">
+            
+            <div className="space-y-3 pt-5 border-t border-gray-100">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[11px] text-gray-900 ml-1 uppercase font-sans font-black">현금 매출</label>
-                  <input type="text" value={formatComma(formData.sales.cash)} onChange={e=>setFormData({...formData, sales:{...formData.sales, cash:parseComma(e.target.value)}})} className="w-full p-5 bg-gray-100 rounded-[28px] border-none outline-none font-black text-right text-gray-900 text-2xl shadow-inner focus:ring-4 ring-rose-200" placeholder="0" />
+                  <label className="text-[10px] text-gray-500 font-semibold pl-1">현금 매출(원)</label>
+                  <input type="text" value={formatComma(formData.sales.cash)} onChange={e=>setFormData({...formData, sales:{...formData.sales, cash:parseComma(e.target.value)}})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none font-bold text-right text-gray-900 text-base focus:ring-1 ring-gray-400" placeholder="0" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] text-gray-900 ml-1 uppercase font-sans font-black">카드 매출</label>
-                  <input type="text" value={formatComma(formData.sales.card)} onChange={e=>setFormData({...formData, sales:{...formData.sales, card:parseComma(e.target.value)}})} className="w-full p-5 bg-gray-100 rounded-[28px] border-none outline-none font-black text-right text-gray-900 text-2xl shadow-inner focus:ring-4 ring-rose-200" placeholder="0" />
+                  <label className="text-[10px] text-gray-500 font-semibold pl-1">카드 매출(원)</label>
+                  <input type="text" value={formatComma(formData.sales.card)} onChange={e=>setFormData({...formData, sales:{...formData.sales, card:parseComma(e.target.value)}})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none font-bold text-right text-gray-900 text-base focus:ring-1 ring-gray-400" placeholder="0" />
                 </div>
               </div>
-              <div className={`p-4 rounded-[28px] flex justify-between items-center text-white shadow-2xl transition-all duration-700 transform ${formData.location === '상행선' ? 'bg-red-600' : 'bg-blue-600'} hover:scale-[1.01] font-black`}>
-                <span className="text-sm font-black">오늘 마감 합계</span>
-                <span className="text-xl font-black tracking-tight">{((Number(parseComma(formData.sales.cash))||0)+(Number(parseComma(formData.sales.card))||0)).toLocaleString()}원</span>
+              <div className="p-3 bg-gray-900 rounded-xl flex justify-between items-center text-white shadow-sm mt-1">
+                <span className="text-xs font-semibold">오늘 마감 합계</span>
+                <span className="text-lg font-bold">{((Number(parseComma(formData.sales.cash))||0)+(Number(parseComma(formData.sales.card))||0)).toLocaleString()}원</span>
               </div>
-              <div className="space-y-1 mt-6">
-                <label className="text-[11px] text-gray-900 ml-1 uppercase font-sans font-black">포스기 종료 전 마지막 매출</label>
-                <input type="text" value={formatComma(formData.sales.finalPos)} onChange={e=>setFormData({...formData, sales:{...formData.sales, finalPos:parseComma(e.target.value)}})} className="w-full p-5 bg-purple-50 rounded-[28px] border-none outline-none font-black text-right text-purple-900 text-2xl shadow-inner focus:ring-4 ring-purple-200" placeholder="0" />
-                <p className="text-[10px] text-gray-400 ml-2 mt-1">* 위 합계 금액에는 포함되지 않으며, 관리자 보고용으로만 사용됩니다.</p>
+              <div className="space-y-1 mt-4 pt-4 border-t border-dashed border-gray-200">
+                <label className="text-[10px] text-gray-500 font-semibold pl-1">포스기 종료 전 마지막 매출</label>
+                <input type="text" value={formatComma(formData.sales.finalPos)} onChange={e=>setFormData({...formData, sales:{...formData.sales, finalPos:parseComma(e.target.value)}})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none font-bold text-right text-gray-800 text-base" placeholder="0" />
+                <p className="text-[9px] text-gray-400 pl-1">* 위 합계에 포함되지 않으며, 보고용으로 사용됩니다.</p>
               </div>
             </div>
           </section>
 
-          <section className="bg-white p-6 rounded-[44px] border-4 border-gray-900 shadow-2xl space-y-6 font-black font-black">
-            <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">2. 재료 및 재고 현황</h2>
-            <div className="grid grid-cols-3 gap-3 pt-2 font-black">
+          <section className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+            <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">2. 재료 및 재고 현황</h2>
+            <div className="grid grid-cols-3 gap-2 pt-1">
               <div className="space-y-1">
-                <label className="text-[10px] text-gray-900 ml-1 uppercase font-sans font-black">재고(개)</label>
-                <input type="number" value={formData.inventory.stockCount} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, stockCount:e.target.value}})} className="w-full p-4 bg-gray-100 rounded-[24px] border-none outline-none font-black text-right text-gray-900 text-xl shadow-inner focus:ring-4 ring-rose-200" placeholder="0" />
+                <label className="text-[9px] text-gray-500 font-semibold pl-1">남아있는 뻥튀기 (봉투)</label>
+                <input type="number" value={formData.inventory.stockCount} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, stockCount:e.target.value}})} className="w-full p-2.5 bg-gray-50 rounded-lg border border-gray-200 outline-none font-bold text-right text-gray-800 text-sm" placeholder="0" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] text-gray-900 ml-1 uppercase font-sans font-black">오늘 사용한 쌀(kg)</label>
-                <input type="number" value={formData.inventory.usedRice} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, usedRice:e.target.value}})} className="w-full p-4 bg-gray-100 rounded-[24px] border-none outline-none font-black text-right text-gray-900 text-xl shadow-inner focus:ring-4 ring-rose-200" placeholder="0" />
+                <label className="text-[9px] text-gray-500 font-semibold pl-1">사용 쌀(kg)</label>
+                <input type="number" value={formData.inventory.usedRice} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, usedRice:e.target.value}})} className="w-full p-2.5 bg-gray-50 rounded-lg border border-gray-200 outline-none font-bold text-right text-gray-800 text-sm" placeholder="0" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] text-gray-900 ml-1 uppercase font-sans font-black">로스(kg)</label>
-                <input type="number" value={formData.inventory.loss} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, loss:e.target.value}})} className="w-full p-4 bg-gray-100 rounded-[24px] border-none outline-none font-black text-right text-gray-900 text-xl shadow-inner focus:ring-4 ring-rose-200" placeholder="0" />
+                <label className="text-[9px] text-gray-500 font-semibold pl-1">로스(kg)</label>
+                <input type="number" value={formData.inventory.loss} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, loss:e.target.value}})} className="w-full p-2.5 bg-gray-50 rounded-lg border border-gray-200 outline-none font-bold text-right text-gray-800 text-sm" placeholder="0" />
               </div>
             </div>
             
-            <div className="pt-8 border-t-2 border-dashed border-gray-100 space-y-8 font-black font-black">
-              <div className="grid grid-cols-1 gap-6 font-black font-black">
-                <div className="space-y-3 font-black">
-                  <p className="text-base text-gray-900 border-l-4 border-gray-900 pl-3">뻥쌀 (최소 2박스)</p>
-                  <div className="flex gap-3">
-                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, riceStatus:'충분'}})} className={`flex-1 py-4 rounded-2xl border-4 transition-all font-black ${formData.inventory.riceStatus==='충분'?'bg-blue-600 border-blue-600 text-white shadow-lg':'bg-white border-gray-100 text-gray-300'}`}>충분함</button>
-                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, riceStatus:'부족'}})} className={`flex-1 py-4 rounded-2xl border-4 transition-all font-black ${formData.inventory.riceStatus==='부족'?'bg-red-600 border-red-600 text-white shadow-lg':'bg-white border-gray-100 text-gray-300'}`}>부족함</button>
+            <div className="pt-5 border-t border-gray-100 space-y-5">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-700 pl-1">뻥쌀 (최소 2박스)</p>
+                  <div className="flex gap-2">
+                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, riceStatus:'충분'}})} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${formData.inventory.riceStatus==='충분'?'bg-gray-800 border-gray-800 text-white':'bg-gray-50 border-gray-200 text-gray-500'}`}>충분함</button>
+                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, riceStatus:'부족'}})} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${formData.inventory.riceStatus==='부족'?'bg-gray-800 border-gray-800 text-white':'bg-gray-50 border-gray-200 text-gray-500'}`}>부족함</button>
                   </div>
                 </div>
-                <div className="space-y-3 font-black">
-                  <p className="text-base text-gray-900 border-l-4 border-gray-900 pl-3">포장 비닐 (최소 300장)</p>
-                  <div className="flex gap-3">
-                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, bagStatus:'충분'}})} className={`flex-1 py-4 rounded-2xl border-4 transition-all font-black ${formData.inventory.bagStatus==='충분'?'bg-blue-600 border-blue-600 text-white shadow-lg':'bg-white border-gray-100 text-gray-300'}`}>충분함</button>
-                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, bagStatus:'부족'}})} className={`flex-1 py-4 rounded-2xl border-4 transition-all font-black ${formData.inventory.bagStatus==='부족'?'bg-red-600 border-red-600 text-white shadow-lg':'bg-white border-gray-100 text-gray-300'}`}>부족함</button>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-700 pl-1">포장 비닐 (최소 300장)</p>
+                  <div className="flex gap-2">
+                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, bagStatus:'충분'}})} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${formData.inventory.bagStatus==='충분'?'bg-gray-800 border-gray-800 text-white':'bg-gray-50 border-gray-200 text-gray-500'}`}>충분함</button>
+                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, bagStatus:'부족'}})} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${formData.inventory.bagStatus==='부족'?'bg-gray-800 border-gray-800 text-white':'bg-gray-50 border-gray-200 text-gray-500'}`}>부족함</button>
                   </div>
                 </div>
-                <div className="space-y-3 font-black">
-                  <p className="text-base text-gray-900 border-l-4 border-gray-900 pl-3 font-black">빵끈 (최소 250개)</p>
-                  <div className="flex gap-3 font-black">
-                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, tieStatus:'충분'}})} className={`flex-1 py-4 rounded-2xl border-4 transition-all font-black ${formData.inventory.tieStatus==='충분'?'bg-blue-600 border-blue-600 text-white shadow-lg':'bg-white border-gray-100 text-gray-300'}`}>충분함</button>
-                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, tieStatus:'부족'}})} className={`flex-1 py-4 rounded-2xl border-4 transition-all font-black ${formData.inventory.tieStatus==='부족'?'bg-red-600 border-red-600 text-white shadow-lg':'bg-white border-gray-100 text-gray-300'}`}>부족함</button>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-700 pl-1">빵끈 (최소 250개)</p>
+                  <div className="flex gap-2">
+                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, tieStatus:'충분'}})} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${formData.inventory.tieStatus==='충분'?'bg-gray-800 border-gray-800 text-white':'bg-gray-50 border-gray-200 text-gray-500'}`}>충분함</button>
+                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, tieStatus:'부족'}})} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${formData.inventory.tieStatus==='부족'?'bg-gray-800 border-gray-800 text-white':'bg-gray-50 border-gray-200 text-gray-500'}`}>부족함</button>
                   </div>
                 </div>
-                <div className="space-y-3 font-black">
-                  <p className="text-base text-gray-900 border-l-4 border-gray-900 pl-3 font-black font-black">기타 (직접 입력)</p>
-                  <input type="text" value={formData.inventory.otherSupplies} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, otherSupplies:e.target.value}})} className="w-full p-5 bg-gray-100 rounded-3xl border-none outline-none font-black text-gray-900 text-lg shadow-inner focus:ring-4 ring-rose-200" placeholder="그 외 부족한 물품을 적어주세요..." />
+                <div className="space-y-1.5 mt-2">
+                  <p className="text-xs font-semibold text-gray-700 pl-1">기타 물품 (직접 입력)</p>
+                  <input type="text" value={formData.inventory.otherSupplies} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, otherSupplies:e.target.value}})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none text-sm text-gray-800 focus:ring-1 ring-gray-400" placeholder="부족한 물품 입력..." />
                 </div>
               </div>
             </div>
           </section>
 
-          <section className="bg-white p-6 rounded-[44px] border-4 border-gray-900 shadow-2xl space-y-6 font-black font-black font-black">
-            <div className="flex justify-between items-center font-black">
-              <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">3. 증빙 사진 촬영 (필수)</h2>
-              {isUploading && <Loader2 className="w-8 h-8 text-rose-600 animate-spin"/>}
+          <section className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">3. 증빙 사진 촬영</h2>
+              {isUploading && <Loader2 className="w-5 h-5 text-gray-600 animate-spin"/>}
             </div>
-            <div className="grid grid-cols-3 gap-4 pt-2 font-black font-black">
+            <div className="grid grid-cols-3 gap-2.5 pt-1">
               {Object.keys(photoNames).map(p=>(
-                <label key={p} className={`aspect-square rounded-[36px] border-4 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden relative transition-all duration-200 transform active:scale-90 ${formData.photos[p] ? 'bg-gray-50 border-rose-500 shadow-2xl scale-[1.02]' : 'bg-gray-50 border-gray-200 hover:border-gray-900'}`}>
+                <label key={p} className={`aspect-square rounded-xl border border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden relative transition-all duration-200 ${formData.photos[p] ? 'bg-gray-50 border-gray-400' : 'bg-gray-50 border-gray-300 hover:bg-gray-100'}`}>
                   <input type="file" accept="image/*" className="hidden" onChange={e=>handlePhotoChange(p, e)} disabled={isUploading} />
-                  {formData.photos[p] ? <img src={formData.photos[p]} className="w-full h-full object-cover" /> : <div className="flex flex-col items-center opacity-40"><Camera size={40} className="text-gray-900 mb-2"/><span className="text-[11px] text-gray-900 uppercase tracking-tighter">{photoNames[p]}</span></div>}
-                  {formData.photos[p] && <div className="absolute inset-0 bg-rose-600/10 flex items-center justify-center animate-in zoom-in duration-300"><CheckCircle2 className="text-rose-600" size={56}/></div>}
+                  {formData.photos[p] ? <img src={formData.photos[p]} className="w-full h-full object-cover" /> : <div className="flex flex-col items-center opacity-50"><Camera size={24} className="text-gray-700 mb-1"/><span className="text-[10px] text-gray-700 font-semibold">{photoNames[p]}</span></div>}
+                  {formData.photos[p] && <div className="absolute inset-0 bg-black/5 flex items-center justify-center"><CheckCircle2 className="text-white drop-shadow-md" size={32}/></div>}
                 </label>
               ))}
             </div>
           </section>
 
-          <section className="bg-white p-6 rounded-[44px] border-4 border-gray-900 shadow-2xl space-y-6 font-black font-black font-black">
-            <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">4. 대기 손님 파악</h2>
-            <div className="flex gap-4 pt-2 font-black font-black">
-              <button onClick={()=>handleWaitingToggle(true)} className={`flex-1 py-7 rounded-[28px] font-black text-xl border-4 transition-all duration-300 transform active:scale-95 ${formData.waiting.hadWaiting===true?'bg-blue-600 border-blue-600 text-white shadow-2xl':'bg-white border-gray-100 text-gray-400'}`}>손님 있었음</button>
-              <button onClick={()=>handleWaitingToggle(false)} className={`flex-1 py-7 rounded-[28px] font-black text-xl border-4 transition-all duration-300 transform active:scale-95 ${formData.waiting.hadWaiting===false?'bg-gray-900 border-gray-900 text-white shadow-2xl':'bg-white border-gray-100 text-gray-400'}`}>없었음</button>
+          <section className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">4. 대기 손님 여부</h2>
+            <div className="flex gap-2 pt-1">
+              <button onClick={()=>handleWaitingToggle(true)} className={`flex-1 py-4 rounded-xl font-semibold text-sm border transition-all ${formData.waiting.hadWaiting===true?'bg-gray-900 border-gray-900 text-white shadow-sm':'bg-gray-50 border-gray-200 text-gray-500'}`}>손님 있었음</button>
+              <button onClick={()=>handleWaitingToggle(false)} className={`flex-1 py-4 rounded-xl font-semibold text-sm border transition-all ${formData.waiting.hadWaiting===false?'bg-gray-900 border-gray-900 text-white shadow-sm':'bg-gray-50 border-gray-200 text-gray-500'}`}>없었음</button>
             </div>
           </section>
 
-          <section className="bg-white p-6 rounded-[44px] border-4 border-gray-900 shadow-2xl space-y-4 font-black font-black">
-            <h2 className="text-sm text-gray-900 border-l-8 border-rose-600 pl-4 uppercase tracking-widest font-black">5. 특이사항</h2>
-            <textarea rows="5" value={formData.notes} onChange={e=>setFormData({...formData, notes:e.target.value})} className="w-full bg-gray-100 rounded-[36px] p-8 border-none outline-none text-lg font-black text-gray-900 placeholder:text-gray-300 shadow-inner focus:ring-4 ring-rose-100 font-black font-black font-black" placeholder="사장님께 전달할 특별한 내용이 있다면 입력해 주세요..." />
+          <section className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+            <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">5. 개선이 필요한 부분</h2>
+            <textarea rows="3" value={formData.notes} onChange={e=>setFormData({...formData, notes:e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 border border-gray-200 outline-none text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 ring-gray-400" placeholder="사장님께 전달할 내용을 입력해 주세요..." />
           </section>
 
-          <div className="mt-12 p-5 pb-12 bg-white border-t-4 border-gray-900 font-black font-black font-black">
-            <button onClick={submitReport} disabled={isSubmitting || isUploading} className={`w-full py-7 rounded-[32px] font-black text-2xl text-white shadow-[0_15px_40px_rgba(225,29,72,0.3)] transition-all transform active:scale-95 flex items-center justify-center gap-4 ${isSubmitting||isUploading?'bg-gray-400 border-gray-400 font-black':'bg-rose-600 hover:bg-rose-700 border-rose-700 font-black font-black font-black'}`}>
-              {isSubmitting ? <Loader2 className="animate-spin font-black" size={36}/> : null} {isSubmitting ? '보고서 전송 중...' : '업무공유 제출 완료하기'}
+          <div className="pt-6 pb-8">
+            <button onClick={submitReport} disabled={isSubmitting || isUploading} className={`w-full py-5 rounded-2xl font-bold text-lg text-white shadow-sm transition-all transform active:scale-95 flex items-center justify-center gap-2 ${isSubmitting||isUploading?'bg-gray-400 border-gray-400':'bg-gray-900 hover:bg-gray-800'}`}>
+              {isSubmitting ? <Loader2 className="animate-spin" size={24}/> : null} {isSubmitting ? '전송 중...' : '보고서 제출 완료'}
             </button>
           </div>
         </div>
@@ -2144,45 +2098,45 @@ export default function App() {
       <NavigationMenu />
       {renderView()}
       {showSubmitModal && (
-        <div className="fixed inset-0 bg-black/95 z-[300] flex items-center justify-center p-8 backdrop-blur-2xl animate-in fade-in duration-300 font-black">
-          <div className="bg-white p-12 rounded-[64px] w-full text-center shadow-2xl border-[12px] border-gray-900 animate-in zoom-in duration-500 font-black">
-            <div className="bg-green-100 w-36 h-36 rounded-full flex items-center justify-center mx-auto mb-10 shadow-inner font-black"><CheckCircle2 size={84} className="text-green-600"/></div>
-            <h3 className="text-4xl font-black mb-6 text-gray-900 tracking-tighter uppercase font-sans font-black">SUCCESS</h3>
-            <p className="text-gray-500 mb-14 font-black text-2xl leading-relaxed font-black font-black">매니저님, 정말 고생 많으셨습니다!<br/>조심히 들어가세요. ✨</p>
-            <button onClick={() => { window.location.reload(); }} className="w-full bg-gray-900 text-white py-8 rounded-[36px] font-black text-2xl shadow-2xl active:scale-95 transition-all uppercase tracking-widest font-sans font-black">Main Return</button>
+        <div className="fixed inset-0 bg-black/80 z-[300] flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white p-8 rounded-3xl w-full max-w-sm text-center shadow-2xl border border-gray-200 animate-in zoom-in-95">
+            <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 size={48} className="text-gray-800"/></div>
+            <h3 className="text-2xl font-bold mb-4 text-gray-900 tracking-tight">제출 완료</h3>
+            <p className="text-gray-600 mb-8 text-sm leading-relaxed font-medium">매니저님, 정말 고생 많으셨습니다!<br/>조심히 들어가세요.</p>
+            <button onClick={() => { window.location.reload(); }} className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-base active:scale-95 transition-all">메인으로 돌아가기</button>
           </div>
         </div>
       )}
       {alertMessage && (
-        <div className="fixed inset-0 bg-black/85 z-[310] flex items-center justify-center p-8 backdrop-blur-sm font-black" onClick={()=>setAlertMessage('')}>
-          <div className="bg-white p-12 rounded-[56px] w-full text-center border-8 border-rose-600 shadow-2xl animate-in zoom-in-95 duration-300 font-black" onClick={e=>e.stopPropagation()}>
-            <div className="bg-amber-50 w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner font-black font-black font-black font-black"><AlertCircle size={64} className="text-rose-600"/></div>
-            <p className="text-gray-900 font-black text-2xl mb-12 whitespace-pre-wrap leading-relaxed tracking-tight font-black font-black">{String(alertMessage)}</p>
-            <button onClick={()=>setAlertMessage('')} className="w-full bg-gray-900 text-white py-7 rounded-[32px] font-black text-2xl active:scale-95 transition-all font-black">확인 완료</button>
+        <div className="fixed inset-0 bg-black/60 z-[310] flex items-center justify-center p-6 backdrop-blur-sm" onClick={()=>setAlertMessage('')}>
+          <div className="bg-white p-8 rounded-3xl w-full max-w-sm text-center shadow-xl animate-in zoom-in-95" onClick={e=>e.stopPropagation()}>
+            <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><AlertCircle size={40} className="text-gray-800"/></div>
+            <p className="text-gray-900 font-semibold text-base mb-8 whitespace-pre-wrap">{String(alertMessage)}</p>
+            <button onClick={()=>setAlertMessage('')} className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-sm active:scale-95 transition-all">확인</button>
           </div>
         </div>
       )}
       {selectedPhoto && (
-        <div className="fixed inset-0 bg-black/98 z-[100] flex flex-col items-center justify-center p-6 animate-in fade-in duration-300 font-black font-black font-black" onClick={()=>setSelectedPhoto(null)}>
-          <div className="absolute top-8 right-8 flex gap-8 font-black font-black">
-             <a href={selectedPhoto.url} download={`하트뻥튀기_${selectedPhoto.date}_${selectedPhoto.name}.jpg`} className="p-5 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors shadow-2xl font-black font-black font-black" onClick={e=>e.stopPropagation()}><Download size={36}/></a>
-             <button className="p-5 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors shadow-2xl font-black font-black"><X size={36}/></button>
+        <div className="fixed inset-0 bg-black/90 z-[100] flex flex-col items-center justify-center p-4 animate-in fade-in" onClick={()=>setSelectedPhoto(null)}>
+          <div className="absolute top-6 right-6 flex gap-4">
+             <a href={selectedPhoto.url} download={`하트뻥튀기_${selectedPhoto.date}_${selectedPhoto.name}.jpg`} className="p-3 bg-white/20 rounded-lg text-white hover:bg-white/30 transition-colors" onClick={e=>e.stopPropagation()}><Download size={24}/></a>
+             <button className="p-3 bg-white/20 rounded-lg text-white hover:bg-white/30 transition-colors"><X size={24}/></button>
           </div>
-          <img src={selectedPhoto.url} className="max-w-full max-h-[80vh] rounded-[40px] shadow-2xl border-4 border-white/20 animate-in zoom-in duration-500 font-black font-black font-black" />
-          <div className="text-center mt-10 text-white font-black animate-in slide-in-from-bottom-4 font-black font-black">
-            <p className="text-4xl mb-3 tracking-tighter uppercase font-sans font-black font-black">{String(selectedPhoto.name)}</p>
-            <p className="text-gray-500 text-xl uppercase tracking-[0.2em] font-sans font-black font-black font-black">{String(selectedPhoto.date)} | {String(selectedPhoto.worker)} MANAGER</p>
+          <img src={selectedPhoto.url} className="max-w-full max-h-[75vh] rounded-2xl shadow-xl animate-in zoom-in-95" />
+          <div className="text-center mt-6 text-white animate-in slide-in-from-bottom-4">
+            <p className="text-xl mb-1 font-bold">{String(selectedPhoto.name)}</p>
+            <p className="text-gray-400 text-sm font-medium">{String(selectedPhoto.date)} | {String(selectedPhoto.worker)}</p>
           </div>
         </div>
       )}
       {deleteConfirmId && (
-        <div className="fixed inset-0 bg-black/85 z-[200] flex items-center justify-center p-8 backdrop-blur-md animate-in fade-in duration-200 font-black font-black font-black font-black">
-           <div className="bg-white p-12 rounded-[56px] w-full max-w-sm text-center border-[10px] border-red-600 shadow-2xl animate-in zoom-in-95 duration-300 font-black font-black font-black">
-              <div className="bg-red-50 w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner font-black"><AlertCircle size={64} className="text-red-600"/></div>
-              <p className="font-black text-gray-900 mb-12 text-3xl tracking-tight leading-tight font-black">정말 이 항목을<br/>영구 삭제하시겠습니까?</p>
-              <div className="flex gap-4 font-black font-black font-black">
-                 <button onClick={()=>setDeleteConfirmId(null)} className="flex-1 py-6 bg-gray-100 rounded-[28px] font-black text-xl text-gray-500 hover:bg-gray-200 transition-colors font-black font-black">취소</button>
-                 <button onClick={()=>executeDelete(deleteConfirmId.id)} className="flex-1 py-6 bg-red-600 text-white rounded-[28px] font-black shadow-2xl active:scale-95 transition-all font-black font-black font-black font-black font-black">삭제 승인</button>
+        <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in">
+           <div className="bg-white p-8 rounded-3xl w-full max-w-sm text-center shadow-xl animate-in zoom-in-95">
+              <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><AlertCircle size={40} className="text-gray-700"/></div>
+              <p className="font-bold text-gray-900 mb-8 text-lg">해당 항목을<br/>삭제하시겠습니까?</p>
+              <div className="flex gap-3">
+                 <button onClick={()=>setDeleteConfirmId(null)} className="flex-1 py-4 bg-gray-100 rounded-xl font-semibold text-sm text-gray-600 hover:bg-gray-200 transition-colors">취소</button>
+                 <button onClick={()=>executeDelete(deleteConfirmId.id)} className="flex-1 py-4 bg-gray-900 text-white rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all">삭제 승인</button>
               </div>
            </div>
         </div>
