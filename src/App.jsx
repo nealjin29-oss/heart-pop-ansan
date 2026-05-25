@@ -30,9 +30,9 @@ const appId = rawAppId.replace(/\//g, '_');
 // 💡 Constants (단가 및 설정)
 // =====================================================================
 const UNIT_PRICES = {
-  rice: 3500,  // 쌀 1kg당 가격
-  vinyl: 50,   // 포장 비닐 1장당 가격
-  tie: 10,     // 빵끈 1개당 가격
+  rice: 2500,  // 쌀 1kg당 가격
+  vinyl: 40,   // 포장 비닐 1장당 가격
+  tie: 5,     // 빵끈 1개당 가격
 };
 
 const ACCOUNT_OPTIONS = ['기업은행', '카뱅1', '카뱅2', '쿠팡와우', '현대카드'];
@@ -48,8 +48,8 @@ const parseComma = (val) => {
   return val.toString().replace(/[^0-9]/g, '');
 };
 
-// 고정 매니저 리스트
-const managerList = ['정윤이', '황진웅', '최윤미', '장유미', '윤종규'];
+// 고정 매니저 리스트 (사용자 요청에 의해 비움 -> DB에서 수동 등록한 이름만 불러옴)
+const managerList = [];
 
 // 비용 카테고리 리스트
 const COST_CATEGORIES = [
@@ -136,6 +136,9 @@ const formatTime = (isoString) => {
   return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: true });
 };
 
+// 쌀박스 선택을 위한 0.5단위 배열 생성 (0 ~ 20박스)
+const riceBoxOptions = Array.from({ length: 41 }, (_, i) => i * 0.5);
+
 export default function App() {
   // --- States ---
   const [user, setUser] = useState(null);
@@ -177,13 +180,13 @@ export default function App() {
   const [customScheduleWorker, setCustomScheduleWorker] = useState('');
   const [newManagerName, setNewManagerName] = useState('');
   
-  // 비용 관리 폼 상태 (계좌 드롭다운 추가됨)
+  // 비용 관리 폼 상태
   const [costSelectionDate, setCostSelectionDate] = useState(null);
   const [costForm, setCostForm] = useState({ category: '재료', amount: '', description: '', account: '기업은행' });
 
   // Q&A 폼용 상태
   const [qnaQuestion, setQnaQuestion] = useState('');
-  const [qnaAuthor, setQnaAuthor] = useState('정윤이');
+  const [qnaAuthor, setQnaAuthor] = useState('');
   const [qnaReplyId, setQnaReplyId] = useState(null);
   const [qnaReplyContent, setQnaReplyContent] = useState('');
 
@@ -193,7 +196,7 @@ export default function App() {
   const [formData, setFormData] = useState({
     location: '상행선',
     date: getTodayString(), 
-    worker: '정윤이',
+    worker: '', // 기본값 비움
     customWorker: '',
     sales: { cash: '', card: '', finalPos: '' },
     inventory: { 
@@ -201,7 +204,7 @@ export default function App() {
       usedRice: '', 
       loss: '', 
       leftRice: '', 
-      riceStatus: null, 
+      remainingRiceBoxes: 0, // 새로 추가된 객관식 필드
       bagStatus: null,
       tieStatus: null,
       otherSupplies: ''
@@ -211,7 +214,7 @@ export default function App() {
     waiting: { hadWaiting: null, lastNumber: '', missedTeams: '' }
   });
 
-  // 활성화된 기본 매니저 (삭제되지 않은 매니저만)
+  // 활성화된 기본 매니저 (삭제되지 않은 매니저만 - 현재 빈 배열)
   const activeDefaults = useMemo(() => {
     return managerList.filter(m => !deletedDefaults.includes(m));
   }, [deletedDefaults]);
@@ -221,10 +224,15 @@ export default function App() {
     return [...new Set([...activeDefaults, ...dbManagers.map(m => m.name)])];
   }, [activeDefaults, dbManagers]);
 
-  // Q&A 작성자 기본값을 로드된 매니저의 첫번째로 설정
+  // 기본 작성자 세팅
   useEffect(() => {
-    if (allManagers.length > 0 && (!qnaAuthor || !allManagers.includes(qnaAuthor))) {
-      setQnaAuthor(allManagers[0]);
+    if (allManagers.length > 0) {
+      if (!qnaAuthor || !allManagers.includes(qnaAuthor)) {
+        setQnaAuthor(allManagers[0]);
+      }
+      if (!formData.worker) {
+        setFormData(prev => ({ ...prev, worker: allManagers[0] }));
+      }
     }
   }, [allManagers]);
 
@@ -360,6 +368,7 @@ export default function App() {
       return setAlertMessage("해당 일자는 휴무일로 설정되어 리포트를 제출할 수 없습니다.");
     }
     if (!formData.sales.cash || !formData.sales.card) return setAlertMessage("현금/카드 매출을 모두 입력해 주세요.");
+    if (!formData.worker) return setAlertMessage("담당 매니저를 선택하거나 입력해 주세요.");
     
     if (!user) return setAlertMessage("인증 중입니다. 잠시만 기다려 주세요.");
     setIsSubmitting(true);
@@ -386,7 +395,7 @@ export default function App() {
     if (!qnaQuestion.trim() || !user) return;
     try {
       await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'qna'), {
-        author: qnaAuthor || '정윤이', 
+        author: qnaAuthor || (allManagers[0] || '익명'), 
         question: qnaQuestion, 
         answer: null, 
         timestamp: new Date().toISOString(), 
@@ -677,6 +686,7 @@ export default function App() {
     return { total, cash, card, sang, ha, commission, profit };
   }, [reports]);
 
+  // 로스 통계 및 전반적인 월간 통계 계산
   const monthlyStats = useMemo(() => {
     const year = calendarDate.getFullYear();
     const month = calendarDate.getMonth();
@@ -706,8 +716,12 @@ export default function App() {
     const card = mReports.reduce((s, r) => s + (Number(r.sales?.card) || 0), 0);
     const cashPercent = total > 0 ? Math.round((cash / total) * 100) : 0;
     const cardPercent = total > 0 ? Math.round((card / total) * 100) : 0;
-    const totalRice = mReports.reduce((s, r) => s + (Number(r.inventory?.usedRice) || 0), 0);
     
+    // 쌀 및 로스 계산 추가
+    const totalRice = mReports.reduce((s, r) => s + (Number(r.inventory?.usedRice) || 0), 0);
+    const totalLoss = mReports.reduce((s, r) => s + (Number(r.inventory?.loss) || 0), 0);
+    const lossPercentage = totalRice > 0 ? ((totalLoss / totalRice) * 100).toFixed(1) : 0;
+
     const uniqueDaysCount = new Set(mReports.map(r => r.date)).size;
     const monthHolidaysCount = holidays.filter(h => {
       const d = new Date(h);
@@ -715,14 +729,20 @@ export default function App() {
     }).length;
 
     const avgRicePerDay = uniqueDaysCount > 0 ? (totalRice / uniqueDaysCount).toFixed(1) : 0;
-    const cumulativeRiceCost = totalRice * 2500; // 과거 고정 단가 참고치
+    const cumulativeRiceCost = totalRice * UNIT_PRICES.rice;
     
     const expectedSales = totalRice * 42735;
     const lossAmount = expectedSales - total;
     const avgDailySales = uniqueDaysCount > 0 ? Math.round(total / uniqueDaysCount) : 0;
     const targetDifference = avgDailySales - 1900000;
     
-    return { total, profit, sang, ha, cash, card, cashPercent, cardPercent, avgRicePerDay, cumulativeRiceCost, workingDays: uniqueDaysCount, holidayCount: monthHolidaysCount, maxDay, minDay, expectedSales, lossAmount, avgDailySales, targetDifference };
+    return { 
+      total, profit, sang, ha, cash, card, cashPercent, cardPercent, 
+      avgRicePerDay, cumulativeRiceCost, workingDays: uniqueDaysCount, 
+      holidayCount: monthHolidaysCount, maxDay, minDay, 
+      expectedSales, lossAmount, avgDailySales, targetDifference,
+      totalRice, totalLoss, lossPercentage 
+    };
   }, [reports, calendarDate, holidays]);
 
   const filteredReports = useMemo(() => {
@@ -861,15 +881,15 @@ export default function App() {
        }
     });
 
-    // 2. 일별 재료비 자동 환산 (보고서 기준)
+    // 2. 일별 재료비 자동 환산 (보고서 기준 - 단가 정확하게 반영됨)
     reports.forEach(r => {
       const d = new Date(r.date);
       if (d.getFullYear() === year && d.getMonth() === month) {
         const usedRice = Number(r.inventory?.usedRice) || 0;
         const sales = Number(r.totalSales) || 0;
-        const usedBags = Math.floor(sales / 5000);
+        const usedBags = Math.floor(sales / 5000); // 5000원당 1봉지(빵끈1+비닐1)
         
-        // 쌀, 비닐, 빵끈 합산 금액
+        // 쌀(2500), 비닐(40), 빵끈(5) 정확한 합산 금액
         const materialCost = (usedRice * UNIT_PRICES.rice) + (usedBags * UNIT_PRICES.vinyl) + (usedBags * UNIT_PRICES.tie);
         
         if (materialCost > 0) {
@@ -898,12 +918,12 @@ export default function App() {
     return { totalManual, manualByDate, dailyMaterialCosts, totalMaterial, grandTotal, costPercentage, totalLabor, categoryBreakdown };
   }, [costs, scheduleStats, calendarDate, monthlyStats, reports]);
 
-
   const downloadCSV = () => {
-    const headers = ['일자', '위치', '매니저', '총매출', '현금', '카드', '사용한쌀(kg)', '로스(kg)', '남아있는 뻥튀기 (봉투)', '개선이 필요한 부분'];
+    // 엑셀 다운로드 포맷에 로스와 남은 쌀박스 추가 반영
+    const headers = ['일자', '위치', '매니저', '총매출', '현금', '카드', '사용한쌀(kg)', '로스(kg)', '남은쌀박스', '남은봉투', '개선사항'];
     const rows = filteredReports.map(r => [
       r.date, r.location, r.worker, r.totalSales, r.sales?.cash, r.sales?.card, 
-      r.inventory?.usedRice, r.inventory?.loss || 0, r.inventory?.stockCount, 
+      r.inventory?.usedRice || 0, r.inventory?.loss || 0, r.inventory?.remainingRiceBoxes || 0, r.inventory?.stockCount || 0, 
       (r.notes || "").replace(/,/g, " ")
     ]);
     const csvContent = "\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
@@ -1644,6 +1664,24 @@ export default function App() {
                     <button key={name} onClick={()=>{setFilterType('WORKER');setFilterValue(name)}} className={`px-4 py-2 rounded-xl border text-xs font-semibold whitespace-nowrap transition-all ${filterType==='WORKER' && filterValue===name ? 'bg-gray-900 text-white border-gray-900' : 'bg-white border-gray-200 text-gray-500'}`}>{name}</button>
                   ))}
                 </div>
+
+                {/* 누적 로스 배너 추가 */}
+                <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex items-center gap-4 animate-in slide-in-from-top-2">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+                      <TrendingUp className="text-red-500 w-6 h-6" />
+                  </div>
+                  <div>
+                      <h3 className="text-xs font-bold text-gray-500 mb-1">이번 달 누적 로스 현황</h3>
+                      <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-bold text-red-600">{monthlyStats.totalLoss.toLocaleString()}kg</span>
+                          <span className="text-xs font-bold text-gray-400">/ 사용 {monthlyStats.totalRice.toLocaleString()}kg</span>
+                      </div>
+                      <div className="mt-1 inline-block bg-white px-2 py-0.5 rounded text-[10px] font-bold text-red-600 border border-red-200">
+                          쌀 사용량 대비 로스율 : {monthlyStats.lossPercentage}%
+                      </div>
+                  </div>
+                </div>
+
                 {filteredReports.map(r => (
                   <div key={r.id} className="p-5 rounded-2xl border border-gray-200 shadow-sm bg-white animate-in slide-in-from-bottom-4">
                     <div className="flex justify-between items-start mb-4">
@@ -1668,6 +1706,11 @@ export default function App() {
                          {editReportId === r.id ? (
                            <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
                              <p className="text-[10px] text-gray-500 font-bold">수정 모드</p>
+                             {/* 관리자 탭에서도 날짜를 자유롭게 수정 가능하도록 보장 */}
+                             <div className="space-y-1">
+                               <label className="text-[9px] text-gray-500 font-semibold">보고 날짜</label>
+                               <input type="date" value={editData.date} onChange={e=>setEditData({...editData, date:e.target.value})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-xs" />
+                             </div>
                              <div className="grid grid-cols-2 gap-2">
                                <div className="space-y-1">
                                  <label className="text-[9px] text-gray-500 font-semibold">현금</label>
@@ -1691,6 +1734,16 @@ export default function App() {
                                  <label className="text-[9px] text-gray-500 font-semibold">남아있는 뻥튀기 (봉투)</label>
                                  <input type="number" value={editData.inventory?.stockCount || ''} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, stockCount:e.target.value}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
                                </div>
+                               <div className="space-y-1 mt-1">
+                                 <label className="text-[9px] text-red-500 font-semibold">로스(kg)</label>
+                                 <input type="number" value={editData.inventory?.loss || ''} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, loss:e.target.value}})} className="w-full p-2 bg-red-50 text-red-700 rounded-lg border border-red-200 text-right text-xs" />
+                               </div>
+                               <div className="space-y-1 mt-1">
+                                 <label className="text-[9px] text-gray-500 font-semibold">남은 쌀박스</label>
+                                 <select value={editData.inventory?.remainingRiceBoxes || 0} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, remainingRiceBoxes: Number(e.target.value)}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-xs text-right">
+                                    {riceBoxOptions.map(opt => <option key={opt} value={opt}>{opt} 박스</option>)}
+                                 </select>
+                               </div>
                              </div>
                              <div className="space-y-1 mt-2">
                                <label className="text-[9px] text-gray-500 font-semibold">개선이 필요한 부분</label>
@@ -1712,7 +1765,9 @@ export default function App() {
                                 <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
                                   <p className="text-[9px] text-gray-400 mb-1 font-semibold">재고 정보</p>
                                   <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>쌀 사용량</span><span className="font-medium">{r.inventory?.usedRice || 0}kg</span></div>
-                                  <div className="flex justify-between text-xs text-gray-800"><span>남아있는 뻥튀기 (봉투)</span><span className="font-medium">{r.inventory?.stockCount || 0}봉투</span></div>
+                                  <div className="flex justify-between text-xs text-red-600 mb-0.5"><span>로스</span><span className="font-medium">{r.inventory?.loss || 0}kg</span></div>
+                                  <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>남은 쌀박스</span><span className="font-medium">{r.inventory?.remainingRiceBoxes || 0}박스</span></div>
+                                  <div className="flex justify-between text-xs text-gray-800"><span>남은 뻥튀기 (봉투)</span><span className="font-medium">{r.inventory?.stockCount || 0}봉투</span></div>
                                 </div>
                              </div>
 
@@ -1723,7 +1778,6 @@ export default function App() {
 
                              <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
                                 <p className="text-[9px] text-gray-400 mb-1 font-semibold">익일 자재 상태</p>
-                                <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>뻥쌀</span><span className={r.inventory?.riceStatus === '부족' ? 'text-gray-900 font-bold' : 'text-gray-500'}>{r.inventory?.riceStatus || '미기입'}</span></div>
                                 <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>포장 비닐</span><span className={r.inventory?.bagStatus === '부족' ? 'text-gray-900 font-bold' : 'text-gray-500'}>{r.inventory?.bagStatus || '미기입'}</span></div>
                                 <div className="flex justify-between text-xs text-gray-800"><span>빵끈</span><span className={r.inventory?.tieStatus === '부족' ? 'text-gray-900 font-bold' : 'text-gray-500'}>{r.inventory?.tieStatus || '미기입'}</span></div>
                              </div>
@@ -2082,19 +2136,22 @@ export default function App() {
                 <input type="number" value={formData.inventory.usedRice} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, usedRice:e.target.value}})} className="w-full p-2.5 bg-gray-50 rounded-lg border border-gray-200 outline-none font-bold text-right text-gray-800 text-sm" placeholder="0" />
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] text-gray-500 font-semibold pl-1">로스(kg)</label>
-                <input type="number" value={formData.inventory.loss} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, loss:e.target.value}})} className="w-full p-2.5 bg-gray-50 rounded-lg border border-gray-200 outline-none font-bold text-right text-gray-800 text-sm" placeholder="0" />
+                <label className="text-[9px] text-red-500 font-semibold pl-1">로스(kg)</label>
+                <input type="number" value={formData.inventory.loss} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, loss:e.target.value}})} className="w-full p-2.5 bg-red-50 text-red-700 rounded-lg border border-red-200 outline-none font-bold text-right text-sm" placeholder="0" />
               </div>
             </div>
             
             <div className="pt-5 border-t border-gray-100 space-y-5">
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700 pl-1">뻥쌀 (최소 2박스)</p>
-                  <div className="flex gap-2">
-                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, riceStatus:'충분'}})} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${formData.inventory.riceStatus==='충분'?'bg-gray-800 border-gray-800 text-white':'bg-gray-50 border-gray-200 text-gray-500'}`}>충분함</button>
-                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, riceStatus:'부족'}})} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${formData.inventory.riceStatus==='부족'?'bg-gray-800 border-gray-800 text-white':'bg-gray-50 border-gray-200 text-gray-500'}`}>부족함</button>
-                  </div>
+                  <p className="text-xs font-semibold text-gray-700 pl-1">현재 남아있는 쌀박스</p>
+                  <select 
+                    value={formData.inventory.remainingRiceBoxes} 
+                    onChange={e=>setFormData({...formData, inventory:{...formData.inventory, remainingRiceBoxes: Number(e.target.value)}})} 
+                    className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none text-sm font-semibold text-gray-800 focus:ring-1 ring-gray-400"
+                  >
+                    {riceBoxOptions.map(opt => <option key={opt} value={opt}>{opt} 박스</option>)}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-gray-700 pl-1">포장 비닐 (최소 300장)</p>
