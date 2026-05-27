@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Camera, CheckCircle2, Circle, MapPin, Calendar, DollarSign, AlertCircle, FileText, User, Lock, Download, Image as ImageIcon, BarChart3, Users, LogOut, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, CalendarDays, List, HelpCircle, Edit2, Trash2, Save, Maximize2, Loader2, FileSpreadsheet, TrendingUp, Menu, MessageSquare, BookOpen, Clock, Power, Key, Thermometer, Droplets, Wind, Package, Trash, Shirt, Box, Play, Layers, PiggyBank, CreditCard, Coins, ShoppingCart, Percent, UserPlus, UserMinus, PlusCircle, MinusCircle, History, Wallet, Plus, PieChart, ArrowUp, ArrowDown, Calculator } from 'lucide-react';
+import { Camera, CheckCircle2, Circle, MapPin, Calendar, DollarSign, AlertCircle, FileText, User, Lock, Download, Image as ImageIcon, BarChart3, Users, LogOut, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, CalendarDays, List, HelpCircle, Edit2, Trash2, Save, Maximize2, Loader2, FileSpreadsheet, TrendingUp, Menu, MessageSquare, BookOpen, Clock, Power, Key, Thermometer, Droplets, Wind, Package, Trash, Shirt, Box, Play, Layers, PiggyBank, CreditCard, Coins, ShoppingCart, Percent, UserPlus, UserMinus, PlusCircle, MinusCircle, History, Wallet, Plus, PieChart, ArrowUp, ArrowDown, Calculator, Upload } from 'lucide-react';
 
 // === Firebase Database Integration ===
 import { initializeApp } from 'firebase/app';
@@ -32,7 +32,7 @@ const appId = rawAppId.replace(/\//g, '_');
 const UNIT_PRICES = {
   rice: 2500,  // 쌀 1kg당 가격
   vinyl: 40,   // 포장 비닐 1장당 가격
-  tie: 5,     // 빵끈 1개당 가격
+  tie: 5,      // 빵끈 1개당 가격
 };
 
 const ACCOUNT_OPTIONS = ['기업은행', '카뱅1', '카뱅2', '쿠팡와우', '현대카드'];
@@ -136,15 +136,13 @@ const formatTime = (isoString) => {
   return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: true });
 };
 
-// 쌀박스 선택을 위한 0.5단위 배열 생성 (0 ~ 20박스)
-const riceBoxOptions = Array.from({ length: 41 }, (_, i) => i * 0.5);
-
 export default function App() {
   // --- States ---
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false); 
   const [reports, setReports] = useState([]);
   const [qnas, setQnas] = useState([]); 
+  const [references, setReferences] = useState([]); 
   const [holidays, setHolidays] = useState([]);
   const [schedules, setSchedules] = useState({});
   const [dbManagers, setDbManagers] = useState([]); 
@@ -190,6 +188,11 @@ export default function App() {
   const [qnaReplyId, setQnaReplyId] = useState(null);
   const [qnaReplyContent, setQnaReplyContent] = useState('');
 
+  // 레퍼런스(사진) 폼용 상태
+  const [refDirectionTab, setRefDirectionTab] = useState('상행선');
+  const [editRefId, setEditRefId] = useState(null);
+  const [editRefDesc, setEditRefDesc] = useState('');
+
   const [openChecks, setOpenChecks] = useState({});
   const [closeChecks, setCloseChecks] = useState({});
 
@@ -204,7 +207,7 @@ export default function App() {
       usedRice: '', 
       loss: '', 
       leftRice: '', 
-      remainingRiceBoxes: 0, // 새로 추가된 객관식 필드
+      remainingRiceBoxes: '', // 주관식 텍스트 필드로 변경
       bagStatus: null,
       tieStatus: null,
       otherSupplies: ''
@@ -264,6 +267,7 @@ export default function App() {
     if (!user) return;
     const reportsRef = collection(db, 'artifacts', appId, 'public', 'data', 'reports');
     const qnaRef = collection(db, 'artifacts', appId, 'public', 'data', 'qna');
+    const refsRef = collection(db, 'artifacts', appId, 'public', 'data', 'references');
     const holidaysRef = collection(db, 'artifacts', appId, 'public', 'data', 'holidays');
     const schedulesRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
     const managersRef = collection(db, 'artifacts', appId, 'public', 'data', 'managers');
@@ -283,6 +287,13 @@ export default function App() {
       snapshot.forEach((doc) => fetched.push({ id: doc.id, ...doc.data() }));
       fetched.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       setQnas(fetched);
+    }, (err) => console.error(err));
+
+    const unsubRefs = onSnapshot(refsRef, (snapshot) => {
+      const fetched = [];
+      snapshot.forEach((doc) => fetched.push({ id: doc.id, ...doc.data() }));
+      fetched.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      setReferences(fetched);
     }, (err) => console.error(err));
 
     const unsubHolidays = onSnapshot(holidaysRef, (snapshot) => {
@@ -328,7 +339,7 @@ export default function App() {
       setCosts(fetched);
     }, (err) => console.error(err));
 
-    return () => { unsubReports(); unsubQna(); unsubHolidays(); unsubSchedules(); unsubManagers(); unsubInventoryLogs(); unsubSettings(); unsubCosts(); };
+    return () => { unsubReports(); unsubQna(); unsubRefs(); unsubHolidays(); unsubSchedules(); unsubManagers(); unsubInventoryLogs(); unsubSettings(); unsubCosts(); };
   }, [user]);
 
   // --- Handlers ---
@@ -445,13 +456,19 @@ export default function App() {
     } catch (e) { setAlertMessage("배정 실패: " + e.message); }
   };
 
-  const executeDelete = async (id) => {
-    if (!user) return;
+  const executeDelete = async () => {
+    if (!user || !deleteConfirmId) return;
     try {
       let col = 'reports';
-      if (view === 'qna') col = 'qna';
-      if (adminViewMode === 'inventory' && view === 'admin') col = 'inventoryLogs';
-      if (adminViewMode === 'cost' && view === 'admin') col = 'costs';
+      const id = typeof deleteConfirmId === 'object' ? deleteConfirmId.id : deleteConfirmId;
+      if (typeof deleteConfirmId === 'object' && deleteConfirmId.col) {
+         col = deleteConfirmId.col;
+      } else {
+         if (view === 'qna') col = 'qna';
+         if (view === 'reference') col = 'references';
+         if (adminViewMode === 'inventory' && view === 'admin') col = 'inventoryLogs';
+         if (adminViewMode === 'cost' && view === 'admin') col = 'costs';
+      }
 
       await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', col, id));
       setDeleteConfirmId(null);
@@ -483,6 +500,58 @@ export default function App() {
 
   const toggleOpenManualCheck = (id) => setOpenChecks(prev => ({ ...prev, [id]: !prev[id] }));
   const toggleCloseManualCheck = (id) => setCloseChecks(prev => ({ ...prev, [id]: !prev[id] }));
+
+  // --- Reference Photo Handlers ---
+  const handleRefUpload = (e) => {
+    if(!user) return;
+    const file = e.target.files[0];
+    if(file) {
+      setIsUploading(true);
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = async () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const max = 1200;
+          if (width > height) {
+            if (width > max) { height *= max / width; width = max; }
+          } else {
+            if (height > max) { width *= max / height; height = max; }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const base64Img = canvas.toDataURL('image/jpeg', 0.8);
+          try {
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'references'), {
+              direction: refDirectionTab,
+              imageUrl: base64Img,
+              description: '',
+              timestamp: new Date().toISOString()
+            });
+          } catch (err) { setAlertMessage("업로드 실패: " + err.message); }
+          setIsUploading(false);
+          e.target.value = null; // 초기화
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const saveReferenceEdit = async () => {
+    if(!user || !editRefId) return;
+    try {
+      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'references', editRefId), {
+        description: editRefDesc
+      }, { merge: true });
+      setEditRefId(null);
+      setEditRefDesc('');
+    } catch (err) { setAlertMessage(err.message); }
+  };
 
   // --- Custom Manager Handlers ---
   const handleAddManager = async () => {
@@ -683,8 +752,38 @@ export default function App() {
     const ha = reports.filter(r => r.location === '하행선').reduce((s, r) => s + (Number(r.totalSales) || 0), 0);
     const commission = total * 0.4;
     const profit = total * 0.6; 
-    return { total, cash, card, sang, ha, commission, profit };
-  }, [reports]);
+    
+    // 누적 영업일수 및 평균 매출 계산
+    const uniqueDaysSet = new Set(reports.map(r => r.date));
+    const cumulativeOperatingDays = uniqueDaysSet.size;
+    const avgDailySales = cumulativeOperatingDays > 0 ? Math.round(total / cumulativeOperatingDays) : 0;
+
+    // 올해 남은 영업일수 계산
+    let remainingDaysThisYear = 0;
+    const todayStr = getTodayString();
+    const year = parseInt(todayStr.split('-')[0]);
+    
+    const current = new Date(todayStr + "T00:00:00");
+    const end = new Date(`${year}-12-31T00:00:00`);
+    
+    while (current <= end) {
+      const y = current.getFullYear();
+      const m = String(current.getMonth() + 1).padStart(2, '0');
+      const day = String(current.getDate()).padStart(2, '0');
+      const dStr = `${y}-${m}-${day}`;
+
+      // 휴무일이 아니고, 이미 리포트가 제출된 날이 아니면 카운트
+      if (!holidays.includes(dStr) && !uniqueDaysSet.has(dStr)) {
+        remainingDaysThisYear++;
+      }
+      current.setDate(current.getDate() + 1);
+    }
+
+    // 기대 매출 예측 (현재 누적 + 평균매출 * 남은영업일수)
+    const expectedYearlySales = total + (avgDailySales * remainingDaysThisYear);
+
+    return { total, cash, card, sang, ha, commission, profit, cumulativeOperatingDays, remainingDaysThisYear, avgDailySales, expectedYearlySales };
+  }, [reports, holidays]);
 
   // 로스 통계 및 전반적인 월간 통계 계산
   const monthlyStats = useMemo(() => {
@@ -923,7 +1022,7 @@ export default function App() {
     const headers = ['일자', '위치', '매니저', '총매출', '현금', '카드', '사용한쌀(kg)', '로스(kg)', '남은쌀박스', '남은봉투', '개선사항'];
     const rows = filteredReports.map(r => [
       r.date, r.location, r.worker, r.totalSales, r.sales?.cash, r.sales?.card, 
-      r.inventory?.usedRice || 0, r.inventory?.loss || 0, r.inventory?.remainingRiceBoxes || 0, r.inventory?.stockCount || 0, 
+      r.inventory?.usedRice || 0, r.inventory?.loss || 0, r.inventory?.remainingRiceBoxes || '', r.inventory?.stockCount || 0, 
       (r.notes || "").replace(/,/g, " ")
     ]);
     const csvContent = "\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
@@ -1064,6 +1163,9 @@ export default function App() {
           </button>
           <button onClick={() => { setView('qna'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-xl font-medium transition-all ${view === 'qna' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
             <HelpCircle size={20}/> 질문과 답변 (Q&A)
+          </button>
+          <button onClick={() => { setView('reference'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-xl font-medium transition-all ${view === 'reference' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+            <ImageIcon size={20}/> 사진 레퍼런스
           </button>
           <div className="pt-4 pb-2 px-4 text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Manuals</div>
           <button onClick={() => { setView('manual_open'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-4 rounded-xl font-medium transition-all ${view === 'manual_open' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
@@ -1253,15 +1355,23 @@ export default function App() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                          <div className="bg-white p-6 rounded-2xl border border-gray-200 flex flex-col items-center justify-center space-y-1 shadow-sm">
-                            <Coins className="text-gray-400 mb-1" size={24}/>
-                            <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-widest">누적 현금 매출</span>
-                            <span className="text-lg font-bold text-gray-900">{allTimeStats.cash.toLocaleString()}</span>
+                            <CalendarDays className="text-gray-400 mb-1" size={24}/>
+                            <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-widest">누적 / 남은 영업일수</span>
+                            <span className="text-lg font-bold text-gray-900">{allTimeStats.cumulativeOperatingDays}일 <span className="text-sm font-normal text-gray-400">/ {allTimeStats.remainingDaysThisYear}일</span></span>
                          </div>
                          <div className="bg-white p-6 rounded-2xl border border-gray-200 flex flex-col items-center justify-center space-y-1 shadow-sm">
-                            <CreditCard className="text-gray-400 mb-1" size={24}/>
-                            <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-widest">누적 카드 매출</span>
-                            <span className="text-lg font-bold text-gray-900">{allTimeStats.card.toLocaleString()}</span>
+                            <Calculator className="text-gray-400 mb-1" size={24}/>
+                            <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-widest">1일 평균 매출</span>
+                            <span className="text-lg font-bold text-gray-900">{allTimeStats.avgDailySales.toLocaleString()}원</span>
                          </div>
+                      </div>
+                      <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 flex flex-col items-center justify-center space-y-1 shadow-sm">
+                         <div className="flex items-center gap-1.5 mb-1">
+                            <TrendingUp className="text-indigo-500" size={20}/>
+                            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">올해 12월 31일 기준 기대 매출 예측</span>
+                         </div>
+                         <span className="text-2xl font-black text-indigo-900">{allTimeStats.expectedYearlySales.toLocaleString()}원</span>
+                         <span className="text-xs font-medium text-indigo-500/80 mt-1">현재 총 매출 + (평균 매출 × 남은 {allTimeStats.remainingDaysThisYear}일)</span>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                          <div className="bg-red-50 p-6 rounded-2xl border border-red-100 flex flex-col items-center justify-center space-y-1">
@@ -1364,7 +1474,12 @@ export default function App() {
                           <span className="text-gray-600 font-bold">=</span>
                           <div className="w-full flex justify-between items-center bg-indigo-50 text-indigo-900 px-4 py-3 rounded-lg border border-indigo-200">
                              <span className="text-xs font-bold text-indigo-700">영업이익</span>
-                             <span className="text-lg font-black">{(monthlyStats.total - (monthlyStats.total * 0.4) - monthlyCosts.grandTotal).toLocaleString()}원</span>
+                             <span className="text-lg font-black">
+                                {(monthlyStats.total - (monthlyStats.total * 0.4) - monthlyCosts.grandTotal).toLocaleString()}원
+                                <span className="text-sm font-semibold text-indigo-500 ml-1">
+                                   ({monthlyStats.total > 0 ? (((monthlyStats.total - (monthlyStats.total * 0.4) - monthlyCosts.grandTotal) / monthlyStats.total) * 100).toFixed(1) : 0}%)
+                                </span>
+                             </span>
                           </div>
                        </div>
                     </div>
@@ -1740,9 +1855,13 @@ export default function App() {
                                </div>
                                <div className="space-y-1 mt-1">
                                  <label className="text-[9px] text-gray-500 font-semibold">남은 쌀박스</label>
-                                 <select value={editData.inventory?.remainingRiceBoxes || 0} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, remainingRiceBoxes: Number(e.target.value)}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-xs text-right">
-                                    {riceBoxOptions.map(opt => <option key={opt} value={opt}>{opt} 박스</option>)}
-                                 </select>
+                                 <input 
+                                    type="text" 
+                                    value={editData.inventory?.remainingRiceBoxes || ''} 
+                                    onChange={e=>setEditData({...editData, inventory:{...editData.inventory, remainingRiceBoxes: e.target.value}})} 
+                                    className="w-full p-2 bg-white rounded-lg border border-gray-200 text-xs text-right"
+                                    placeholder="자유롭게 입력 (예: 3박스 반)"
+                                 />
                                </div>
                              </div>
                              <div className="space-y-1 mt-2">
@@ -1766,7 +1885,7 @@ export default function App() {
                                   <p className="text-[9px] text-gray-400 mb-1 font-semibold">재고 정보</p>
                                   <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>쌀 사용량</span><span className="font-medium">{r.inventory?.usedRice || 0}kg</span></div>
                                   <div className="flex justify-between text-xs text-red-600 mb-0.5"><span>로스</span><span className="font-medium">{r.inventory?.loss || 0}kg</span></div>
-                                  <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>남은 쌀박스</span><span className="font-medium">{r.inventory?.remainingRiceBoxes || 0}박스</span></div>
+                                  <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>남은 쌀박스</span><span className="font-medium">{r.inventory?.remainingRiceBoxes || '기록없음'}</span></div>
                                   <div className="flex justify-between text-xs text-gray-800"><span>남은 뻥튀기 (봉투)</span><span className="font-medium">{r.inventory?.stockCount || 0}봉투</span></div>
                                 </div>
                              </div>
@@ -1993,6 +2112,68 @@ export default function App() {
       );
     }
 
+    if (view === 'reference') {
+      const currentRefs = references.filter(r => r.direction === refDirectionTab);
+      return (
+         <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-40 font-sans">
+            <header className="bg-white p-5 border-b border-gray-200 flex justify-between items-center sticky top-0 z-20">
+               <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100"><Menu size={20}/></button>
+               <h1 className="font-bold text-gray-900 text-lg">사진 레퍼런스</h1>
+               <div className="w-8"></div>
+            </header>
+            <div className="p-4 space-y-5">
+               <div className="flex gap-2 p-1.5 bg-gray-200 rounded-xl">
+                  <button onClick={()=>setRefDirectionTab('상행선')} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${refDirectionTab === '상행선' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>상행선 레퍼런스</button>
+                  <button onClick={()=>setRefDirectionTab('하행선')} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${refDirectionTab === '하행선' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>하행선 레퍼런스</button>
+               </div>
+               
+               <div className="flex justify-end mb-2">
+                  <label className="bg-gray-900 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer active:scale-95 transition-transform shadow-sm">
+                     {isUploading ? <Loader2 className="animate-spin" size={16}/> : <Upload size={16}/>}
+                     {isUploading ? '업로드 중...' : '새 사진 첨부'}
+                     <input type="file" accept="image/*" className="hidden" onChange={handleRefUpload} disabled={isUploading}/>
+                  </label>
+               </div>
+               
+               <div className="grid grid-cols-2 gap-3">
+                  {currentRefs.length === 0 && (
+                     <div className="col-span-2 text-center py-12 text-gray-400 font-semibold text-sm bg-white rounded-2xl border border-dashed border-gray-200">등록된 사진이 없습니다.</div>
+                  )}
+                  {currentRefs.map(ref => (
+                     <div key={ref.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 flex flex-col animate-in slide-in-from-bottom-2">
+                        <div className="aspect-square bg-gray-100 relative cursor-pointer group" onClick={() => setSelectedPhoto({url: ref.imageUrl, name: '레퍼런스', date: new Date(ref.timestamp).toLocaleDateString(), worker: ''})}>
+                           <img src={ref.imageUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Maximize2 className="text-white" size={24}/>
+                           </div>
+                        </div>
+                        <div className="p-3 bg-white flex flex-col flex-1">
+                           {editRefId === ref.id ? (
+                              <div className="space-y-2 flex-1 flex flex-col">
+                                 <input autoFocus type="text" value={editRefDesc} onChange={e=>setEditRefDesc(e.target.value)} className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-800 outline-none" placeholder="설명 입력..."/>
+                                 <div className="flex gap-1.5 mt-auto">
+                                    <button onClick={saveReferenceEdit} className="flex-1 bg-gray-900 text-white py-1.5 rounded-md text-[10px] font-bold">저장</button>
+                                    <button onClick={()=>setEditRefId(null)} className="flex-1 bg-gray-200 text-gray-700 py-1.5 rounded-md text-[10px] font-bold">취소</button>
+                                 </div>
+                              </div>
+                           ) : (
+                              <div className="flex-1 flex flex-col">
+                                 <p className="text-xs font-semibold text-gray-800 line-clamp-2 min-h-[2rem] leading-relaxed break-words">{ref.description || <span className="text-gray-400 italic font-normal">설명 없음</span>}</p>
+                                 <div className="flex justify-end gap-1.5 mt-2 pt-2 border-t border-gray-100">
+                                    <button onClick={() => { setEditRefId(ref.id); setEditRefDesc(ref.description || ''); }} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit2 size={14}/></button>
+                                    <button onClick={() => setDeleteConfirmId({id: ref.id, col: 'references'})} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={14}/></button>
+                                 </div>
+                              </div>
+                           )}
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+         </div>
+      );
+    }
+
     if (view === 'manual_open' || view === 'manual_close') {
       const isOpen = view === 'manual_open';
       const manualItems = isOpen ? openManualItems : closeManualItems;
@@ -2145,13 +2326,13 @@ export default function App() {
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-gray-700 pl-1">현재 남아있는 쌀박스</p>
-                  <select 
+                  <input 
+                    type="text"
                     value={formData.inventory.remainingRiceBoxes} 
-                    onChange={e=>setFormData({...formData, inventory:{...formData.inventory, remainingRiceBoxes: Number(e.target.value)}})} 
+                    onChange={e=>setFormData({...formData, inventory:{...formData.inventory, remainingRiceBoxes: e.target.value}})} 
                     className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none text-sm font-semibold text-gray-800 focus:ring-1 ring-gray-400"
-                  >
-                    {riceBoxOptions.map(opt => <option key={opt} value={opt}>{opt} 박스</option>)}
-                  </select>
+                    placeholder="자유롭게 입력해주세요 (예: 3박스 반)"
+                  />
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-gray-700 pl-1">포장 비닐 (최소 300장)</p>
@@ -2257,7 +2438,7 @@ export default function App() {
               <p className="font-black text-gray-900 mb-12 text-3xl tracking-tight leading-tight font-black">정말 이 항목을<br/>영구 삭제하시겠습니까?</p>
               <div className="flex gap-4 font-black font-black font-black">
                  <button onClick={()=>setDeleteConfirmId(null)} className="flex-1 py-6 bg-gray-100 rounded-[28px] font-black text-xl text-gray-500 hover:bg-gray-200 transition-colors font-black font-black">취소</button>
-                 <button onClick={()=>executeDelete(deleteConfirmId.id)} className="flex-1 py-6 bg-red-600 rounded-[28px] font-black text-xl text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-500/50">삭제 승인</button>
+                 <button onClick={executeDelete} className="flex-1 py-6 bg-red-600 rounded-[28px] font-black text-xl text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-500/50">삭제 승인</button>
               </div>
            </div>
         </div>
