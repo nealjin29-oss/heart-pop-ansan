@@ -136,6 +136,9 @@ const formatTime = (isoString) => {
   return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: true });
 };
 
+// 쌀박스 선택을 위한 0.5단위 배열 생성 (0 ~ 20박스)
+const riceBoxOptions = Array.from({ length: 41 }, (_, i) => i * 0.5);
+
 export default function App() {
   // --- States ---
   const [user, setUser] = useState(null);
@@ -353,6 +356,14 @@ export default function App() {
   const handlePhotoChange = (key, e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // 용량 제한 20MB
+    if (file.size > 20 * 1024 * 1024) {
+      setAlertMessage("사진 첨부 용량 제한은 20MB 입니다.");
+      e.target.value = null;
+      return;
+    }
+
     setIsUploading(true);
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -361,14 +372,14 @@ export default function App() {
       img.src = event.target.result;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX = 1200; 
+        const MAX = 1000; 
         let w = img.width; let h = img.height;
         if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
         else { if (h > MAX) { w *= MAX / h; h = MAX; } }
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
-        setFormData(p => ({ ...p, photos: { ...p.photos, [key]: canvas.toDataURL('image/jpeg', 0.7) } }));
+        setFormData(p => ({ ...p, photos: { ...p.photos, [key]: canvas.toDataURL('image/jpeg', 0.6) } }));
         setIsUploading(false);
       };
     };
@@ -482,16 +493,21 @@ export default function App() {
 
   const saveEdit = async () => {
     if (!user || !editData) return;
-    const cashVal = Number(parseComma(editData.sales.cash)) || 0;
-    const cardVal = Number(parseComma(editData.sales.card)) || 0;
-    const finalPosVal = Number(parseComma(editData.sales.finalPos)) || 0;
+    const cashVal = Number(parseComma(editData.sales?.cash)) || 0;
+    const cardVal = Number(parseComma(editData.sales?.card)) || 0;
+    const finalPosVal = Number(parseComma(editData.sales?.finalPos)) || 0;
     const total = cashVal + cardVal;
     
     const id = editData.id;
-    const updated = { ...editData, sales: { cash: cashVal, card: cardVal, finalPos: finalPosVal }, totalSales: total };
+    const updated = { 
+       ...editData, 
+       sales: { ...(editData.sales || {}), cash: cashVal, card: cardVal, finalPos: finalPosVal }, 
+       totalSales: total,
+       inventory: { ...(editData.inventory || {}) }
+    };
     delete updated.id;
     try {
-      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'reports', id), updated);
+      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'reports', id), updated, { merge: true });
       setEditReportId(null);
       setEditData(null);
       setAlertMessage("리포트가 성공적으로 수정되었습니다.");
@@ -506,6 +522,11 @@ export default function App() {
     if(!user) return;
     const file = e.target.files[0];
     if(file) {
+      if (file.size > 20 * 1024 * 1024) {
+        setAlertMessage("사진 첨부 용량 제한은 20MB 입니다.");
+        e.target.value = null;
+        return;
+      }
       setIsUploading(true);
       const reader = new FileReader();
       reader.onload = (ev) => {
@@ -514,7 +535,7 @@ export default function App() {
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
-          const max = 1200;
+          const max = 1000;
           if (width > height) {
             if (width > max) { height *= max / width; width = max; }
           } else {
@@ -524,7 +545,7 @@ export default function App() {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-          const base64Img = canvas.toDataURL('image/jpeg', 0.8);
+          const base64Img = canvas.toDataURL('image/jpeg', 0.7);
           try {
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'references'), {
               direction: refDirectionTab,
@@ -534,7 +555,7 @@ export default function App() {
             });
           } catch (err) { setAlertMessage("업로드 실패: " + err.message); }
           setIsUploading(false);
-          e.target.value = null; // 초기화
+          e.target.value = null;
         };
         img.src = ev.target.result;
       };
@@ -1017,9 +1038,10 @@ export default function App() {
     return { totalManual, manualByDate, dailyMaterialCosts, totalMaterial, grandTotal, costPercentage, totalLabor, categoryBreakdown };
   }, [costs, scheduleStats, calendarDate, monthlyStats, reports]);
 
+
   const downloadCSV = () => {
     // 엑셀 다운로드 포맷에 로스와 남은 쌀박스 추가 반영
-    const headers = ['일자', '위치', '매니저', '총매출', '현금', '카드', '사용한쌀(kg)', '로스(kg)', '남은쌀박스', '남은봉투', '개선사항'];
+    const headers = ['일자', '위치', '매니저', '총매출', '현금', '카드', '사용한쌀(kg)', '로스(kg)', '원재료 재고(뻥쌀 Box)', '포장된 뻥튀기', '개선사항'];
     const rows = filteredReports.map(r => [
       r.date, r.location, r.worker, r.totalSales, r.sales?.cash, r.sales?.card, 
       r.inventory?.usedRice || 0, r.inventory?.loss || 0, r.inventory?.remainingRiceBoxes || '', r.inventory?.stockCount || 0, 
@@ -1476,6 +1498,7 @@ export default function App() {
                              <span className="text-xs font-bold text-indigo-700">영업이익</span>
                              <span className="text-lg font-black">
                                 {(monthlyStats.total - (monthlyStats.total * 0.4) - monthlyCosts.grandTotal).toLocaleString()}원
+                                {/* 수정 1: 영업이익이 매출에서 차지하는 비중 괄호로 추가 */}
                                 <span className="text-sm font-semibold text-indigo-500 ml-1">
                                    ({monthlyStats.total > 0 ? (((monthlyStats.total - (monthlyStats.total * 0.4) - monthlyCosts.grandTotal) / monthlyStats.total) * 100).toFixed(1) : 0}%)
                                 </span>
@@ -1824,41 +1847,41 @@ export default function App() {
                              {/* 관리자 탭에서도 날짜를 자유롭게 수정 가능하도록 보장 */}
                              <div className="space-y-1">
                                <label className="text-[9px] text-gray-500 font-semibold">보고 날짜</label>
-                               <input type="date" value={editData.date} onChange={e=>setEditData({...editData, date:e.target.value})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-xs" />
+                               <input type="date" value={editData.date || ''} onChange={e=>setEditData({...editData, date:e.target.value})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-xs" />
                              </div>
                              <div className="grid grid-cols-2 gap-2">
                                <div className="space-y-1">
                                  <label className="text-[9px] text-gray-500 font-semibold">현금</label>
-                                 <input type="text" value={formatComma(editData.sales?.cash || '')} onChange={e=>setEditData({...editData, sales:{...editData.sales, cash:parseComma(e.target.value)}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
+                                 <input type="text" value={formatComma(editData.sales?.cash || '')} onChange={e=>setEditData({...editData, sales:{...(editData.sales || {}), cash:parseComma(e.target.value)}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
                                </div>
                                <div className="space-y-1">
                                  <label className="text-[9px] text-gray-500 font-semibold">카드</label>
-                                 <input type="text" value={formatComma(editData.sales?.card || '')} onChange={e=>setEditData({...editData, sales:{...editData.sales, card:parseComma(e.target.value)}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
+                                 <input type="text" value={formatComma(editData.sales?.card || '')} onChange={e=>setEditData({...editData, sales:{...(editData.sales || {}), card:parseComma(e.target.value)}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
                                </div>
                              </div>
                              <div className="space-y-1">
                                <label className="text-[9px] text-gray-500 font-semibold">종료 매출</label>
-                               <input type="text" value={formatComma(editData.sales?.finalPos || '')} onChange={e=>setEditData({...editData, sales:{...editData.sales, finalPos:parseComma(e.target.value)}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
+                               <input type="text" value={formatComma(editData.sales?.finalPos || '')} onChange={e=>setEditData({...editData, sales:{...(editData.sales || {}), finalPos:parseComma(e.target.value)}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
                              </div>
                              <div className="grid grid-cols-2 gap-2 mt-2">
                                <div className="space-y-1">
                                  <label className="text-[9px] text-gray-500 font-semibold">사용쌀(kg)</label>
-                                 <input type="number" value={editData.inventory?.usedRice || ''} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, usedRice:e.target.value}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
+                                 <input type="number" value={editData.inventory?.usedRice || ''} onChange={e=>setEditData({...editData, inventory:{...(editData.inventory || {}), usedRice:e.target.value}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
                                </div>
                                <div className="space-y-1">
-                                 <label className="text-[9px] text-gray-500 font-semibold">남아있는 뻥튀기 (봉투)</label>
-                                 <input type="number" value={editData.inventory?.stockCount || ''} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, stockCount:e.target.value}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
+                                 <label className="text-[9px] text-gray-500 font-semibold">포장된 뻥튀기</label>
+                                 <input type="number" value={editData.inventory?.stockCount || ''} onChange={e=>setEditData({...editData, inventory:{...(editData.inventory || {}), stockCount:e.target.value}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
                                </div>
                                <div className="space-y-1 mt-1">
                                  <label className="text-[9px] text-red-500 font-semibold">로스(kg)</label>
-                                 <input type="number" value={editData.inventory?.loss || ''} onChange={e=>setEditData({...editData, inventory:{...editData.inventory, loss:e.target.value}})} className="w-full p-2 bg-red-50 text-red-700 rounded-lg border border-red-200 text-right text-xs" />
+                                 <input type="number" value={editData.inventory?.loss || ''} onChange={e=>setEditData({...editData, inventory:{...(editData.inventory || {}), loss:e.target.value}})} className="w-full p-2 bg-red-50 text-red-700 rounded-lg border border-red-200 text-right text-xs" />
                                </div>
                                <div className="space-y-1 mt-1">
-                                 <label className="text-[9px] text-gray-500 font-semibold">남은 쌀박스</label>
+                                 <label className="text-[9px] text-gray-500 font-semibold">원재료 재고(뻥쌀 Box)</label>
                                  <input 
                                     type="text" 
                                     value={editData.inventory?.remainingRiceBoxes || ''} 
-                                    onChange={e=>setEditData({...editData, inventory:{...editData.inventory, remainingRiceBoxes: e.target.value}})} 
+                                    onChange={e=>setEditData({...editData, inventory:{...(editData.inventory || {}), remainingRiceBoxes: e.target.value}})} 
                                     className="w-full p-2 bg-white rounded-lg border border-gray-200 text-xs text-right"
                                     placeholder="자유롭게 입력 (예: 3박스 반)"
                                  />
@@ -1885,8 +1908,8 @@ export default function App() {
                                   <p className="text-[9px] text-gray-400 mb-1 font-semibold">재고 정보</p>
                                   <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>쌀 사용량</span><span className="font-medium">{r.inventory?.usedRice || 0}kg</span></div>
                                   <div className="flex justify-between text-xs text-red-600 mb-0.5"><span>로스</span><span className="font-medium">{r.inventory?.loss || 0}kg</span></div>
-                                  <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>남은 쌀박스</span><span className="font-medium">{r.inventory?.remainingRiceBoxes || '기록없음'}</span></div>
-                                  <div className="flex justify-between text-xs text-gray-800"><span>남은 뻥튀기 (봉투)</span><span className="font-medium">{r.inventory?.stockCount || 0}봉투</span></div>
+                                  <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>원재료 재고(뻥쌀 Box)</span><span className="font-medium">{r.inventory?.remainingRiceBoxes || '기록없음'}</span></div>
+                                  <div className="flex justify-between text-xs text-gray-800"><span>포장된 뻥튀기</span><span className="font-medium">{r.inventory?.stockCount || 0}봉투</span></div>
                                 </div>
                              </div>
 
@@ -2047,67 +2070,6 @@ export default function App() {
               </div>
             </div>
           )}
-        </div>
-      );
-    }
-
-    if (view === 'qna') {
-      return (
-        <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-40 font-sans">
-          <header className="bg-white p-5 border-b border-gray-200 flex justify-between items-center sticky top-0 z-20">
-            <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100"><Menu size={20}/></button>
-            <h1 className="font-bold text-gray-900 text-lg">질문과 답변 (Q&A)</h1>
-            <div className="w-8"></div>
-          </header>
-          
-          <div className="p-4 space-y-5">
-            <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-3">
-              <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">새로운 질문</h2>
-              <div className="bg-gray-50 rounded-xl border border-gray-200 p-2 flex flex-col gap-2">
-                <select value={qnaAuthor} onChange={e=>setQnaAuthor(e.target.value)} className="w-full p-2 bg-white rounded-lg border border-gray-200 outline-none text-xs font-semibold text-gray-700">
-                  {allManagers.map(m => <option key={m} value={m}>{m} 매니저</option>)}
-                </select>
-                <textarea value={qnaQuestion} onChange={e=>setQnaQuestion(e.target.value)} className="w-full bg-transparent p-2 text-sm text-gray-900 border-none outline-none" rows={3} placeholder="궁금한 점을 남겨주세요..."/>
-              </div>
-              <button onClick={submitQna} className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-semibold text-sm active:scale-95 transition-all">질문 등록</button>
-            </div>
-            
-            <div className="space-y-3">
-               {qnas.map(q => (
-                 <div key={q.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm animate-in slide-in-from-bottom-2">
-                    <div className="flex justify-between items-center mb-3">
-                       <div className="flex items-center gap-2">
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border ${getManagerColor(q.author)}`}>{q.author}</span>
-                          <span className="text-[10px] text-gray-400 flex items-center gap-1"><Clock size={10}/> {formatTime(q.timestamp)}</span>
-                       </div>
-                       {isAdmin && <button onClick={() => setDeleteConfirmId({ id: q.id, col: 'qna' })} className="text-[10px] font-semibold text-gray-400 hover:text-gray-900">삭제</button>}
-                    </div>
-                    <p className="font-medium text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">{q.question}</p>
-                    
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      {q.answer ? (
-                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                          <p className="text-[10px] font-bold text-gray-600 mb-1.5 flex items-center gap-1"><CheckCircle2 size={12}/> 답변 완료</p>
-                          <p className="font-medium text-gray-800 whitespace-pre-wrap text-sm">{q.answer}</p>
-                        </div>
-                      ) : (
-                        qnaReplyId === q.id ? (
-                          <div className="space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-200">
-                            <textarea value={qnaReplyContent} onChange={e=>setQnaReplyContent(e.target.value)} className="w-full bg-white rounded-lg p-3 text-xs text-gray-900 border border-gray-200 outline-none focus:ring-1 ring-gray-400" rows={2} placeholder="답변을 입력하세요..."/>
-                            <div className="flex gap-2">
-                               <button onClick={()=>submitQnaReply(q.id)} className="flex-1 bg-gray-800 text-white py-2 rounded-lg text-xs font-semibold">등록</button>
-                               <button onClick={()=>setQnaReplyId(null)} className="flex-1 bg-white border border-gray-200 text-gray-600 py-2 rounded-lg text-xs font-semibold">취소</button>
-                            </div>
-                          </div>
-                        ) : (
-                          <button onClick={()=>{setQnaReplyId(q.id); setQnaReplyContent('');}} className="w-full py-3 bg-white text-gray-500 rounded-xl text-xs font-semibold border border-gray-200 hover:bg-gray-50 transition-colors">답변 남기기</button>
-                        )
-                      )}
-                    </div>
-                 </div>
-               ))}
-            </div>
-          </div>
         </div>
       );
     }
@@ -2309,7 +2271,7 @@ export default function App() {
             <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">2. 재료 및 재고 현황</h2>
             <div className="grid grid-cols-3 gap-2 pt-1">
               <div className="space-y-1">
-                <label className="text-[9px] text-gray-500 font-semibold pl-1">남아있는 뻥튀기 (봉투)</label>
+                <label className="text-[9px] text-gray-500 font-semibold pl-1">포장된 뻥튀기</label>
                 <input type="number" value={formData.inventory.stockCount} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, stockCount:e.target.value}})} className="w-full p-2.5 bg-gray-50 rounded-lg border border-gray-200 outline-none font-bold text-right text-gray-800 text-sm" placeholder="0" />
               </div>
               <div className="space-y-1">
@@ -2325,7 +2287,7 @@ export default function App() {
             <div className="pt-5 border-t border-gray-100 space-y-5">
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700 pl-1">현재 남아있는 쌀박스</p>
+                  <p className="text-xs font-semibold text-gray-700 pl-1">원재료 재고(뻥쌀 Box)</p>
                   <input 
                     type="text"
                     value={formData.inventory.remainingRiceBoxes} 
@@ -2437,7 +2399,7 @@ export default function App() {
               <div className="bg-red-50 w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner font-black"><AlertCircle size={64} className="text-red-600"/></div>
               <p className="font-black text-gray-900 mb-12 text-3xl tracking-tight leading-tight font-black">정말 이 항목을<br/>영구 삭제하시겠습니까?</p>
               <div className="flex gap-4 font-black font-black font-black">
-                 <button onClick={()=>setDeleteConfirmId(null)} className="flex-1 py-6 bg-gray-100 rounded-[28px] font-black text-xl text-gray-500 hover:bg-gray-200 transition-colors font-black font-black">취소</button>
+                 <button onClick={()=>{setDeleteConfirmId(null); setDeleteTargetType(null);}} className="flex-1 py-6 bg-gray-100 rounded-[28px] font-black text-xl text-gray-500 hover:bg-gray-200 transition-colors font-black font-black">취소</button>
                  <button onClick={executeDelete} className="flex-1 py-6 bg-red-600 rounded-[28px] font-black text-xl text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-500/50">삭제 승인</button>
               </div>
            </div>
