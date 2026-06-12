@@ -151,7 +151,6 @@ export default function App() {
   const [dbManagers, setDbManagers] = useState([]); 
   const [deletedDefaults, setDeletedDefaults] = useState([]); 
   const [costs, setCosts] = useState([]);
-  const [unreportedCash, setUnreportedCash] = useState([]); // ✅ 하얀 화면을 유발했던 현금 상태 복구
   
   // 재고 관리 상태 
   const [inventoryLogs, setInventoryLogs] = useState([]);
@@ -186,10 +185,6 @@ export default function App() {
   const [costSelectionDate, setCostSelectionDate] = useState(null);
   const [costForm, setCostForm] = useState({ category: '재료', amount: '', description: '', account: '기업은행' });
 
-  // 현금 관리 폼 상태
-  const [cashSelectionDate, setCashSelectionDate] = useState(null);
-  const [cashForm, setCashForm] = useState({ sang: '', ha: '', memo: '' });
-
   // Q&A 폼용 상태
   const [qnaQuestion, setQnaQuestion] = useState('');
   const [qnaAuthor, setQnaAuthor] = useState('');
@@ -215,7 +210,7 @@ export default function App() {
       usedRice: '', 
       loss: '', 
       leftRice: '', 
-      remainingRiceBoxes: '', // 주관식 텍스트 필드
+      remainingRiceBoxes: '', // 주관식 텍스트 필드로 변경
       bagStatus: null,
       tieStatus: null,
       otherSupplies: ''
@@ -282,7 +277,6 @@ export default function App() {
     const inventoryLogsRef = collection(db, 'artifacts', appId, 'public', 'data', 'inventoryLogs');
     const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'managerSettings');
     const costsRef = collection(db, 'artifacts', appId, 'public', 'data', 'costs');
-    const unreportedCashRef = collection(db, 'artifacts', appId, 'public', 'data', 'unreportedCash');
     
     const unsubReports = onSnapshot(reportsRef, (snapshot) => {
       const fetched = [];
@@ -348,14 +342,7 @@ export default function App() {
       setCosts(fetched);
     }, (err) => console.error(err));
 
-    // ✅ 하얀 화면 문제 해결을 위한 현금 스냅샷 복구
-    const unsubCash = onSnapshot(unreportedCashRef, (snapshot) => {
-      const fetched = [];
-      snapshot.forEach(doc => fetched.push({ id: doc.id, ...doc.data() }));
-      setUnreportedCash(fetched);
-    }, (err) => console.error(err));
-
-    return () => { unsubReports(); unsubQna(); unsubRefs(); unsubHolidays(); unsubSchedules(); unsubManagers(); unsubInventoryLogs(); unsubSettings(); unsubCosts(); unsubCash(); };
+    return () => { unsubReports(); unsubQna(); unsubRefs(); unsubHolidays(); unsubSchedules(); unsubManagers(); unsubInventoryLogs(); unsubSettings(); unsubCosts(); };
   }, [user]);
 
   // --- Handlers ---
@@ -385,18 +372,14 @@ export default function App() {
       img.src = event.target.result;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        // ✅ 강력한 최적화: 1MB(1,048,576 bytes) 제한 돌파를 위해 이미지 리사이즈(최대 500px)
-        // 이 비율로 축소 시 사진 5장을 모두 채워도 데이터베이스 업로드 오류를 절대 유발하지 않습니다.
-        const MAX = 500; 
+        const MAX = 1000; 
         let w = img.width; let h = img.height;
         if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
         else { if (h > MAX) { w *= MAX / h; h = MAX; } }
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
-        
-        // ✅ 강력한 최적화: JPEG 품질 0.5 설정으로 1장당 30~50kb 수준으로 극강 압축
-        setFormData(p => ({ ...p, photos: { ...p.photos, [key]: canvas.toDataURL('image/jpeg', 0.5) } }));
+        setFormData(p => ({ ...p, photos: { ...p.photos, [key]: canvas.toDataURL('image/jpeg', 0.6) } }));
         setIsUploading(false);
       };
     };
@@ -510,15 +493,12 @@ export default function App() {
 
   const saveEdit = async () => {
     if (!user || !editData) return;
-    
-    // 안전한 파싱 (과거 데이터 호환)
     const cashVal = Number(parseComma(editData.sales?.cash)) || 0;
     const cardVal = Number(parseComma(editData.sales?.card)) || 0;
     const finalPosVal = Number(parseComma(editData.sales?.finalPos)) || 0;
     const total = cashVal + cardVal;
     
     const id = editData.id;
-    // 과거 데이터 포맷 호환성을 위해 깊은 복사 처리
     const updated = { 
        ...editData, 
        sales: { ...(editData.sales || {}), cash: cashVal, card: cardVal, finalPos: finalPosVal }, 
@@ -527,7 +507,6 @@ export default function App() {
     };
     delete updated.id;
     try {
-      // 과거 기록 수정 시 안전하게 병합되도록 { merge: true } 사용
       await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'reports', id), updated, { merge: true });
       setEditReportId(null);
       setEditData(null);
@@ -556,8 +535,7 @@ export default function App() {
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
-          // 스마트 리사이징: 레퍼런스는 1장 단위이므로 800px로 조금 더 선명하게 저장
-          const max = 800;
+          const max = 1000;
           if (width > height) {
             if (width > max) { height *= max / width; width = max; }
           } else {
@@ -567,7 +545,7 @@ export default function App() {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-          const base64Img = canvas.toDataURL('image/jpeg', 0.6); // 압축 최적화
+          const base64Img = canvas.toDataURL('image/jpeg', 0.7);
           try {
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'references'), {
               direction: refDirectionTab,
@@ -577,7 +555,7 @@ export default function App() {
             });
           } catch (err) { setAlertMessage("업로드 실패: " + err.message); }
           setIsUploading(false);
-          e.target.value = null; // 초기화
+          e.target.value = null;
         };
         img.src = ev.target.result;
       };
@@ -680,38 +658,11 @@ export default function App() {
         category: costForm.category,
         amount: Number(parseComma(costForm.amount)),
         description: costForm.description,
-        account: costForm.account || '기업은행', 
+        account: costForm.account || '기업은행', // 새로 추가된 계좌정보
         timestamp: new Date().toISOString()
       });
       setCostForm({ category: '재료', amount: '', description: '', account: '기업은행' });
     } catch(e) { setAlertMessage("비용 등록 실패: " + e.message); }
-  };
-
-  // ✅ 누락된 현금 핸들러 함수 복구 (하얀 화면 원인)
-  const openCashModal = (dStr) => {
-    setCashSelectionDate(dStr);
-    const existing = unreportedCash.find(c => c.date === dStr);
-    if (existing) {
-      setCashForm({ sang: formatComma(existing.sang), ha: formatComma(existing.ha), memo: existing.memo || '' });
-    } else {
-      setCashForm({ sang: '', ha: '', memo: '' });
-    }
-  };
-
-  const handleSaveCash = async () => {
-    if (!user || !cashSelectionDate) return;
-    try {
-      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'unreportedCash', cashSelectionDate), {
-        date: cashSelectionDate,
-        sang: Number(parseComma(cashForm.sang)) || 0,
-        ha: Number(parseComma(cashForm.ha)) || 0,
-        memo: cashForm.memo || '',
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-      setCashSelectionDate(null);
-      setCashForm({ sang: '', ha: '', memo: '' });
-      setAlertMessage("현금 기록이 저장되었습니다.");
-    } catch(e) { setAlertMessage("저장 실패: " + e.message); }
   };
 
   // --- Statistics & Inventory Calculations ---
@@ -784,7 +735,7 @@ export default function App() {
     };
   }, [reports]);
 
-  // 이번 달 남은 영업일 계산
+  // 이번 달 남은 영업일 계산: 집계달력 기준 이번 달 전체 일수 - 휴무일 - 상/하 마감 모두 제출된 일자
   const remainingDaysThisMonth = useMemo(() => {
     const todayStr = getTodayString();
     const todayDate = new Date(todayStr);
@@ -842,13 +793,14 @@ export default function App() {
       const day = String(current.getDate()).padStart(2, '0');
       const dStr = `${y}-${m}-${day}`;
 
+      // 휴무일이 아니고, 이미 리포트가 제출된 날이 아니면 카운트
       if (!holidays.includes(dStr) && !uniqueDaysSet.has(dStr)) {
         remainingDaysThisYear++;
       }
       current.setDate(current.getDate() + 1);
     }
 
-    // 기대 매출 예측 
+    // 기대 매출 예측 (현재 누적 + 평균매출 * 남은영업일수)
     const expectedYearlySales = total + (avgDailySales * remainingDaysThisYear);
 
     return { total, cash, card, sang, ha, commission, profit, cumulativeOperatingDays, remainingDaysThisYear, avgDailySales, expectedYearlySales };
@@ -1086,26 +1038,10 @@ export default function App() {
     return { totalManual, manualByDate, dailyMaterialCosts, totalMaterial, grandTotal, costPercentage, totalLabor, categoryBreakdown };
   }, [costs, scheduleStats, calendarDate, monthlyStats, reports]);
 
-  // ✅ 하얀 화면 원인이었던 현금 통계 로직 복구
-  const monthlyCashStats = useMemo(() => {
-     const year = calendarDate.getFullYear();
-     const month = calendarDate.getMonth();
-     let totalSang = 0;
-     let totalHa = 0;
-     unreportedCash.forEach(c => {
-       const d = new Date(c.date);
-       if (d.getFullYear() === year && d.getMonth() === month) {
-          totalSang += Number(c.sang) || 0;
-          totalHa += Number(c.ha) || 0;
-       }
-     });
-     return { totalSang, totalHa, total: totalSang + totalHa };
-  }, [unreportedCash, calendarDate]);
-
 
   const downloadCSV = () => {
-    // 엑셀 다운로드 포맷에 용어 변경 반영
-    const headers = ['일자', '위치', '매니저', '총매출', '현금', '카드', '사용한쌀(kg)', '로스(kg)', '원재료 재고(뻥쌀 Box)', '포장된 재고', '개선사항'];
+    // 엑셀 다운로드 포맷에 로스와 남은 쌀박스 추가 반영
+    const headers = ['일자', '위치', '매니저', '총매출', '현금', '카드', '사용한쌀(kg)', '로스(kg)', '원재료 재고(뻥쌀 Box)', '포장된 뻥튀기', '개선사항'];
     const rows = filteredReports.map(r => [
       r.date, r.location, r.worker, r.totalSales, r.sales?.cash, r.sales?.card, 
       r.inventory?.usedRice || 0, r.inventory?.loss || 0, r.inventory?.remainingRiceBoxes || '', r.inventory?.stockCount || 0, 
@@ -1236,41 +1172,6 @@ export default function App() {
     return days;
   };
 
-  const renderCashCalendar = () => {
-    const year = calendarDate.getFullYear();
-    const month = calendarDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDay = new Date(year, month, 1).getDay();
-    const days = [];
-    for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-cash-${i}`} className="p-2"></div>);
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const isHoliday = holidays.includes(dStr);
-      const isToday = dStr === getTodayString();
-      const dailyData = unreportedCash.find(c => c.date === dStr) || { sang: 0, ha: 0 };
-      const dailySum = (Number(dailyData.sang) || 0) + (Number(dailyData.ha) || 0);
-      
-      days.push(
-        <div 
-          key={d} 
-          onClick={() => openCashModal(dStr)}
-          className={`p-1.5 border min-h-[90px] flex flex-col rounded-lg transition-all ${isToday ? 'border-gray-500 border-2 bg-gray-50' : 'border-gray-200 bg-white'} cursor-pointer hover:border-gray-400 active:scale-95`}
-        >
-          <div className="flex justify-between items-start">
-             <span className={`text-xs font-semibold ${isToday ? 'text-gray-900' : isHoliday ? 'text-gray-300' : 'text-gray-600'}`}>{d}</span>
-             {isHoliday && <span className="text-[8px] font-semibold text-gray-400 bg-gray-100 px-1 rounded uppercase tracking-tighter">휴무</span>}
-          </div>
-          <div className="mt-auto space-y-[2px] pt-1">
-             {Number(dailyData.sang) > 0 && <div className="text-[8px] font-semibold bg-red-50 text-red-700 rounded px-1 flex justify-between"><span>상행</span><span>{formatComma(dailyData.sang)}</span></div>}
-             {Number(dailyData.ha) > 0 && <div className="text-[8px] font-semibold bg-blue-50 text-blue-700 rounded px-1 flex justify-between"><span>하행</span><span>{formatComma(dailyData.ha)}</span></div>}
-             {dailySum > 0 && <div className="text-[9px] font-bold text-right border-t border-gray-200 mt-[2px] pt-[2px] text-gray-900">{formatComma(dailySum)}원</div>}
-          </div>
-        </div>
-      );
-    }
-    return days;
-  };
-
   const NavigationMenu = () => (
     <div className={`fixed inset-0 z-50 flex transition-opacity duration-300 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />
@@ -1393,7 +1294,6 @@ export default function App() {
               <button onClick={()=>setAdminViewMode('labor')} className={`flex-1 min-w-[60px] py-3 rounded-lg text-[13px] font-semibold transition-all ${adminViewMode==='labor'?'bg-gray-900 text-white shadow-sm':'text-gray-500 hover:bg-gray-50'}`}>근로/급여</button>
               <button onClick={()=>setAdminViewMode('inventory')} className={`flex-1 min-w-[60px] py-3 rounded-lg text-[13px] font-semibold transition-all ${adminViewMode==='inventory'?'bg-gray-900 text-white shadow-sm':'text-gray-500 hover:bg-gray-50'}`}>재고 관리</button>
               <button onClick={()=>setAdminViewMode('cost')} className={`flex-1 min-w-[60px] py-3 rounded-lg text-[13px] font-semibold transition-all ${adminViewMode==='cost'?'bg-gray-900 text-white shadow-sm':'text-gray-500 hover:bg-gray-50'}`}>비용 관리</button>
-              <button onClick={()=>setAdminViewMode('cash')} className={`flex-1 min-w-[60px] py-3 rounded-lg text-[13px] font-semibold transition-all ${adminViewMode==='cash'?'bg-gray-900 text-white shadow-sm':'text-gray-500 hover:bg-gray-50'}`}>현금</button>
             </div>
 
             {adminViewMode === 'calendar' && (
@@ -1610,40 +1510,6 @@ export default function App() {
               </div>
             )}
 
-            {adminViewMode === 'cash' && (
-              <div className="space-y-6">
-                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm animate-in fade-in">
-                    <p className="text-center text-[10px] font-semibold text-gray-400 mb-4 uppercase tracking-widest">* 날짜를 클릭하여 미신고 현금을 입력하세요.</p>
-                    <div className="grid grid-cols-7 gap-1 text-center mb-3 text-[12px] font-semibold text-gray-400 uppercase tracking-widest">
-                       {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=><div key={d}>{d}</div>)}
-                    </div>
-                    <div className="grid grid-cols-7 gap-1">{renderCashCalendar()}</div>
-                 </div>
-                 
-                 <div className="bg-gray-900 p-8 rounded-2xl text-white shadow-md flex flex-col space-y-6 border border-gray-800 animate-in slide-in-from-bottom-4">
-                    <div className="flex flex-col items-center justify-center space-y-2 pb-6 border-b border-gray-800">
-                       <div className="flex items-center gap-2 bg-gray-800 px-4 py-1.5 rounded-full border border-gray-700">
-                          <Coins size={14} className="text-gray-400"/>
-                          <span className="text-[10px] text-gray-300 uppercase tracking-widest">이번 달 미신고 현금 합계</span>
-                       </div>
-                       <div className="text-center flex flex-col items-center gap-1">
-                          <span className="text-4xl font-bold tracking-tight">{monthlyCashStats.total.toLocaleString()}원</span>
-                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="bg-red-900/30 p-6 rounded-2xl border border-red-900/50 flex flex-col items-center justify-center space-y-1">
-                          <span className="text-[10px] font-semibold text-red-400 uppercase tracking-widest">상행선 현금</span>
-                          <span className="text-2xl font-bold text-red-100">{monthlyCashStats.totalSang.toLocaleString()}원</span>
-                       </div>
-                       <div className="bg-blue-900/30 p-6 rounded-2xl border border-blue-900/50 flex flex-col items-center justify-center space-y-1">
-                          <span className="text-[10px] font-semibold text-blue-400 uppercase tracking-widest">하행선 현금</span>
-                          <span className="text-2xl font-bold text-blue-100">{monthlyCashStats.totalHa.toLocaleString()}원</span>
-                       </div>
-                    </div>
-                 </div>
-              </div>
-            )}
-
             {adminViewMode === 'labor' && (
               <div className="space-y-6 animate-in fade-in">
                  <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm space-y-3">
@@ -1800,7 +1666,7 @@ export default function App() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-center space-y-1.5 relative overflow-hidden">
-                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest relative z-10">원재료 재고(뻥쌀 Box)</span>
+                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest relative z-10">뻥쌀 재고</span>
                           
                           {/* 박스 단위 표시 변환부 */}
                           <span className="text-2xl font-bold text-gray-900 tracking-tight relative z-10">
@@ -2003,7 +1869,7 @@ export default function App() {
                                  <input type="number" value={editData.inventory?.usedRice || ''} onChange={e=>setEditData({...editData, inventory:{...(editData.inventory || {}), usedRice:e.target.value}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
                                </div>
                                <div className="space-y-1">
-                                 <label className="text-[9px] text-gray-500 font-semibold">포장된 재고</label>
+                                 <label className="text-[9px] text-gray-500 font-semibold">포장된 뻥튀기</label>
                                  <input type="number" value={editData.inventory?.stockCount || ''} onChange={e=>setEditData({...editData, inventory:{...(editData.inventory || {}), stockCount:e.target.value}})} className="w-full p-2 bg-white rounded-lg border border-gray-200 text-right text-xs" />
                                </div>
                                <div className="space-y-1 mt-1">
@@ -2043,7 +1909,7 @@ export default function App() {
                                   <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>쌀 사용량</span><span className="font-medium">{r.inventory?.usedRice || 0}kg</span></div>
                                   <div className="flex justify-between text-xs text-red-600 mb-0.5"><span>로스</span><span className="font-medium">{r.inventory?.loss || 0}kg</span></div>
                                   <div className="flex justify-between text-xs text-gray-800 mb-0.5"><span>원재료 재고(뻥쌀 Box)</span><span className="font-medium">{r.inventory?.remainingRiceBoxes || '기록없음'}</span></div>
-                                  <div className="flex justify-between text-xs text-gray-800"><span>포장된 재고</span><span className="font-medium">{r.inventory?.stockCount || 0}봉투</span></div>
+                                  <div className="flex justify-between text-xs text-gray-800"><span>포장된 뻥튀기</span><span className="font-medium">{r.inventory?.stockCount || 0}봉투</span></div>
                                 </div>
                              </div>
 
@@ -2204,40 +2070,291 @@ export default function App() {
               </div>
             </div>
           )}
-
-          {/* 현금 상세 모달 */}
-          {view === 'admin' && adminViewMode === 'cash' && cashSelectionDate && (
-            <div className="fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-200">
-              <div className="bg-white p-6 rounded-3xl w-full max-w-sm border border-gray-200 shadow-xl animate-in zoom-in-95 flex flex-col">
-                <div className="flex justify-between items-center mb-5">
-                  <div>
-                    <p className="text-[10px] text-gray-500 font-semibold">미신고 현금 입력</p>
-                    <h3 className="text-xl font-bold text-gray-900">{cashSelectionDate}</h3>
-                  </div>
-                  <button onClick={()=>setCashSelectionDate(null)} className="p-2 bg-gray-100 rounded-lg"><X size={20}/></button>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                     <label className="text-[11px] font-bold text-red-600 mb-1 flex items-center gap-1"><ArrowUp size={12} style={{transform:'rotate(20deg)'}}/> 상행선 현금 (원)</label>
-                     <input type="text" value={cashForm.sang} onChange={e=>setCashForm({...cashForm, sang: formatComma(e.target.value)})} className="w-full p-3 bg-red-50 rounded-xl border border-red-100 outline-none text-right text-gray-900 font-bold focus:ring-2 ring-red-200" placeholder="0" />
-                  </div>
-                  <div>
-                     <label className="text-[11px] font-bold text-blue-600 mb-1 flex items-center gap-1"><ArrowDown size={12} style={{transform:'rotate(20deg)'}}/> 하행선 현금 (원)</label>
-                     <input type="text" value={cashForm.ha} onChange={e=>setCashForm({...cashForm, ha: formatComma(e.target.value)})} className="w-full p-3 bg-blue-50 rounded-xl border border-blue-100 outline-none text-right text-gray-900 font-bold focus:ring-2 ring-blue-200" placeholder="0" />
-                  </div>
-                  <div>
-                     <label className="text-[11px] font-bold text-gray-600 mb-1 block">메모 (선택)</label>
-                     <input type="text" value={cashForm.memo} onChange={e=>setCashForm({...cashForm, memo: e.target.value})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none text-gray-900 text-sm focus:ring-2 ring-gray-200" placeholder="특이사항..." />
-                  </div>
-                  <button onClick={handleSaveCash} className="w-full py-4 bg-gray-900 text-white rounded-xl text-sm font-bold mt-2 active:scale-95 transition-transform">저장하기</button>
-                </div>
-              </div>
-            </div>
-          )}
-
         </div>
       );
     }
+
+    if (view === 'reference') {
+      const currentRefs = references.filter(r => r.direction === refDirectionTab);
+      return (
+         <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-40 font-sans">
+            <header className="bg-white p-5 border-b border-gray-200 flex justify-between items-center sticky top-0 z-20">
+               <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100"><Menu size={20}/></button>
+               <h1 className="font-bold text-gray-900 text-lg">사진 레퍼런스</h1>
+               <div className="w-8"></div>
+            </header>
+            <div className="p-4 space-y-5">
+               <div className="flex gap-2 p-1.5 bg-gray-200 rounded-xl">
+                  <button onClick={()=>setRefDirectionTab('상행선')} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${refDirectionTab === '상행선' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>상행선 레퍼런스</button>
+                  <button onClick={()=>setRefDirectionTab('하행선')} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${refDirectionTab === '하행선' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>하행선 레퍼런스</button>
+               </div>
+               
+               <div className="flex justify-end mb-2">
+                  <label className="bg-gray-900 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer active:scale-95 transition-transform shadow-sm">
+                     {isUploading ? <Loader2 className="animate-spin" size={16}/> : <Upload size={16}/>}
+                     {isUploading ? '업로드 중...' : '새 사진 첨부'}
+                     <input type="file" accept="image/*" className="hidden" onChange={handleRefUpload} disabled={isUploading}/>
+                  </label>
+               </div>
+               
+               <div className="grid grid-cols-2 gap-3">
+                  {currentRefs.length === 0 && (
+                     <div className="col-span-2 text-center py-12 text-gray-400 font-semibold text-sm bg-white rounded-2xl border border-dashed border-gray-200">등록된 사진이 없습니다.</div>
+                  )}
+                  {currentRefs.map(ref => (
+                     <div key={ref.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 flex flex-col animate-in slide-in-from-bottom-2">
+                        <div className="aspect-square bg-gray-100 relative cursor-pointer group" onClick={() => setSelectedPhoto({url: ref.imageUrl, name: '레퍼런스', date: new Date(ref.timestamp).toLocaleDateString(), worker: ''})}>
+                           <img src={ref.imageUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Maximize2 className="text-white" size={24}/>
+                           </div>
+                        </div>
+                        <div className="p-3 bg-white flex flex-col flex-1">
+                           {editRefId === ref.id ? (
+                              <div className="space-y-2 flex-1 flex flex-col">
+                                 <input autoFocus type="text" value={editRefDesc} onChange={e=>setEditRefDesc(e.target.value)} className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-800 outline-none" placeholder="설명 입력..."/>
+                                 <div className="flex gap-1.5 mt-auto">
+                                    <button onClick={saveReferenceEdit} className="flex-1 bg-gray-900 text-white py-1.5 rounded-md text-[10px] font-bold">저장</button>
+                                    <button onClick={()=>setEditRefId(null)} className="flex-1 bg-gray-200 text-gray-700 py-1.5 rounded-md text-[10px] font-bold">취소</button>
+                                 </div>
+                              </div>
+                           ) : (
+                              <div className="flex-1 flex flex-col">
+                                 <p className="text-xs font-semibold text-gray-800 line-clamp-2 min-h-[2rem] leading-relaxed break-words">{ref.description || <span className="text-gray-400 italic font-normal">설명 없음</span>}</p>
+                                 <div className="flex justify-end gap-1.5 mt-2 pt-2 border-t border-gray-100">
+                                    <button onClick={() => { setEditRefId(ref.id); setEditRefDesc(ref.description || ''); }} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit2 size={14}/></button>
+                                    <button onClick={() => setDeleteConfirmId({id: ref.id, col: 'references'})} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={14}/></button>
+                                 </div>
+                              </div>
+                           )}
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+         </div>
+      );
+    }
+
+    if (view === 'manual_open' || view === 'manual_close') {
+      const isOpen = view === 'manual_open';
+      const manualItems = isOpen ? openManualItems : closeManualItems;
+      const checks = isOpen ? openChecks : closeChecks;
+      const toggleFn = isOpen ? toggleOpenManualCheck : toggleCloseManualCheck;
+      const checkedCount = Object.values(checks).filter(Boolean).length;
+      const progress = Math.round((checkedCount / manualItems.length) * 100);
+
+      return (
+        <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-40 font-sans">
+          <header className="bg-white p-5 border-b border-gray-200 flex justify-between items-center sticky top-0 z-20 shadow-sm">
+            <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"><Menu size={20}/></button>
+            <h1 className="font-bold text-gray-900 text-lg">하트뻥튀기 매뉴얼</h1>
+            <div className="w-8"></div>
+          </header>
+          <div className="p-4 space-y-4">
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5 animate-in slide-in-from-top-4">
+              <div className="flex justify-between items-end">
+                <h2 className="text-sm font-bold text-gray-900 border-l-4 border-gray-900 pl-2">
+                  {isOpen ? '오픈 매뉴얼' : '마감 매뉴얼'}
+                </h2>
+                <span className="text-xl font-bold text-gray-800">{progress}%</span>
+              </div>
+              <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-gray-800 transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
+              </div>
+              <p className="text-xs text-gray-500 leading-relaxed text-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                {isOpen ? '적혀있는 순서대로 꼼꼼히 오픈해주세요.' : '깨끗한 매장을 위해 마감 수칙을 꼭 지켜주세요. 수고하셨습니다.'}
+              </p>
+            </div>
+            
+            <div className="space-y-2.5">
+              {manualItems.map((item) => (
+                <button 
+                  key={item.id}
+                  onClick={() => toggleFn(item.id)}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 transform active:scale-[0.98] ${checks[item.id] ? 'bg-gray-50 border-gray-300' : 'bg-white border-gray-200 shadow-sm'}`}
+                >
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${checks[item.id] ? 'bg-gray-800 text-white' : 'bg-gray-100'}`}>
+                    {checks[item.id] ? <CheckCircle2 size={20}/> : item.icon}
+                  </div>
+                  <span className={`flex-1 text-left font-medium text-sm leading-snug ${checks[item.id] ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                    {item.title}
+                  </span>
+                  {!checks[item.id] && <Circle size={24} className="text-gray-200 flex-shrink-0"/>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-20 font-sans">
+        <header className="bg-white p-5 border-b border-gray-200 sticky top-0 z-20 flex justify-between items-center shadow-sm">
+          <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100"><Menu size={20}/></button>
+          <h1 className="font-bold text-gray-900 text-lg flex items-center gap-1 tracking-tight">❤️ 하트뻥튀기</h1>
+          <div className="w-8"></div>
+        </header>
+
+        <div className="p-4 space-y-5 animate-in slide-in-from-bottom-4 duration-700">
+          <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+             <div className="flex-1 flex flex-col">
+                <span className="text-[10px] font-semibold text-gray-500 mb-0.5">보고 일자</span>
+                <input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="text-sm font-bold text-gray-900 bg-transparent border-none p-0 focus:ring-0 cursor-pointer" />
+             </div>
+             <div className="flex gap-2">
+                <div className="flex flex-col items-center">
+                   <span className="text-[9px] text-gray-400 mb-1 font-semibold flex items-center gap-0.5">상행 <ArrowUp size={10} className="text-red-500" style={{ transform: 'rotate(20deg)' }}/></span>
+                   <span className={`text-[9px] px-2 py-0.5 rounded border transition-all ${dailyStatus.상행선 === '제출완료' ? 'bg-red-600 text-white border-red-600' : 'bg-gray-50 text-gray-400 border-gray-200'}`}>{dailyStatus.상행선}</span>
+                </div>
+                <div className="flex flex-col items-center">
+                   <span className="text-[9px] text-gray-400 mb-1 font-semibold flex items-center gap-0.5">하행 <ArrowDown size={10} className="text-blue-500" style={{ transform: 'rotate(20deg)' }}/></span>
+                   <span className={`text-[9px] px-2 py-0.5 rounded border transition-all ${dailyStatus.하행선 === '제출완료' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 text-gray-400 border-gray-200'}`}>{dailyStatus.하행선}</span>
+                </div>
+             </div>
+          </div>
+
+          <section className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+            <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">1. 기본 정보 및 매출</h2>
+            <div className="space-y-5 pt-1">
+               <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-gray-600">근무 매니저</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {allManagers.map(m => (
+                      <button 
+                        key={m} 
+                        onClick={() => setFormData({...formData, worker: m})} 
+                        className={`py-2.5 rounded-lg text-xs font-medium border transition-all active:scale-95 ${formData.worker === m ? 'bg-gray-900 border-gray-900 text-white' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+               </div>
+               <div className="flex justify-between items-center">
+                  <label className="text-xs font-semibold text-gray-600">영업 위치</label>
+                  <div className="flex gap-2">
+                    {['상행선','하행선'].map(l=>(
+                      <button key={l} onClick={()=>setFormData({...formData, location:l})} className={`px-5 py-2 rounded-lg text-xs font-medium border transition-all active:scale-95 flex items-center gap-1.5 ${formData.location === l ? (l === '상행선' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700') : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
+                         {l} {l === '상행선' ? <ArrowUp size={14} className={formData.location === l ? 'text-red-600' : 'text-gray-400'} style={{transform:'rotate(20deg)'}}/> : <ArrowDown size={14} className={formData.location === l ? 'text-blue-600' : 'text-gray-400'} style={{transform:'rotate(20deg)'}}/>}
+                      </button>
+                    ))}
+                  </div>
+               </div>
+            </div>
+            
+            <div className="space-y-3 pt-5 border-t border-gray-100">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-gray-500 font-semibold pl-1">현금 매출(원)</label>
+                  <input type="text" value={formatComma(formData.sales.cash)} onChange={e=>setFormData({...formData, sales:{...formData.sales, cash:parseComma(e.target.value)}})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none font-bold text-right text-gray-900 text-base focus:ring-1 ring-gray-400" placeholder="0" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-gray-500 font-semibold pl-1">카드 매출(원)</label>
+                  <input type="text" value={formatComma(formData.sales.card)} onChange={e=>setFormData({...formData, sales:{...formData.sales, card:parseComma(e.target.value)}})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none font-bold text-right text-gray-900 text-base focus:ring-1 ring-gray-400" placeholder="0" />
+                </div>
+              </div>
+              <div className="p-3 bg-gray-900 rounded-xl flex justify-between items-center text-white shadow-sm mt-1">
+                <span className="text-xs font-semibold">오늘 마감 합계</span>
+                <span className="text-lg font-bold">{((Number(parseComma(formData.sales.cash))||0)+(Number(parseComma(formData.sales.card))||0)).toLocaleString()}원</span>
+              </div>
+              <div className="space-y-1 mt-4 pt-4 border-t border-dashed border-gray-200">
+                <label className="text-[10px] text-gray-500 font-semibold pl-1">포스기 종료 전 마지막 매출</label>
+                <input type="text" value={formatComma(formData.sales.finalPos)} onChange={e=>setFormData({...formData, sales:{...formData.sales, finalPos:parseComma(e.target.value)}})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none font-bold text-right text-gray-800 text-base" placeholder="0" />
+                <p className="text-[9px] text-gray-400 pl-1">* 위 합계에 포함되지 않으며, 보고용으로 사용됩니다.</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+            <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">2. 재료 및 재고 현황</h2>
+            <div className="grid grid-cols-3 gap-2 pt-1">
+              <div className="space-y-1">
+                <label className="text-[9px] text-gray-500 font-semibold pl-1">포장된 뻥튀기</label>
+                <input type="number" value={formData.inventory.stockCount} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, stockCount:e.target.value}})} className="w-full p-2.5 bg-gray-50 rounded-lg border border-gray-200 outline-none font-bold text-right text-gray-800 text-sm" placeholder="0" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] text-gray-500 font-semibold pl-1">사용 쌀(kg)</label>
+                <input type="number" value={formData.inventory.usedRice} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, usedRice:e.target.value}})} className="w-full p-2.5 bg-gray-50 rounded-lg border border-gray-200 outline-none font-bold text-right text-gray-800 text-sm" placeholder="0" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] text-red-500 font-semibold pl-1">로스(kg)</label>
+                <input type="number" value={formData.inventory.loss} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, loss:e.target.value}})} className="w-full p-2.5 bg-red-50 text-red-700 rounded-lg border border-red-200 outline-none font-bold text-right text-sm" placeholder="0" />
+              </div>
+            </div>
+            
+            <div className="pt-5 border-t border-gray-100 space-y-5">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-700 pl-1">원재료 재고(뻥쌀 Box)</p>
+                  <input 
+                    type="text"
+                    value={formData.inventory.remainingRiceBoxes} 
+                    onChange={e=>setFormData({...formData, inventory:{...formData.inventory, remainingRiceBoxes: e.target.value}})} 
+                    className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none text-sm font-semibold text-gray-800 focus:ring-1 ring-gray-400"
+                    placeholder="자유롭게 입력해주세요 (예: 3박스 반)"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-700 pl-1">포장 비닐 (최소 300장)</p>
+                  <div className="flex gap-2">
+                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, bagStatus:'충분'}})} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${formData.inventory.bagStatus==='충분'?'bg-gray-800 border-gray-800 text-white':'bg-gray-50 border-gray-200 text-gray-500'}`}>충분함</button>
+                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, bagStatus:'부족'}})} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${formData.inventory.bagStatus==='부족'?'bg-gray-800 border-gray-800 text-white':'bg-gray-50 border-gray-200 text-gray-500'}`}>부족함</button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-700 pl-1">빵끈 (최소 250개)</p>
+                  <div className="flex gap-2">
+                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, tieStatus:'충분'}})} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${formData.inventory.tieStatus==='충분'?'bg-gray-800 border-gray-800 text-white':'bg-gray-50 border-gray-200 text-gray-500'}`}>충분함</button>
+                    <button onClick={()=>setFormData({...formData, inventory:{...formData.inventory, tieStatus:'부족'}})} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${formData.inventory.tieStatus==='부족'?'bg-gray-800 border-gray-800 text-white':'bg-gray-50 border-gray-200 text-gray-500'}`}>부족함</button>
+                  </div>
+                </div>
+                <div className="space-y-1.5 mt-2">
+                  <p className="text-xs font-semibold text-gray-700 pl-1">기타 물품 (직접 입력)</p>
+                  <input type="text" value={formData.inventory.otherSupplies} onChange={e=>setFormData({...formData, inventory:{...formData.inventory, otherSupplies:e.target.value}})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none text-sm text-gray-800 focus:ring-1 ring-gray-400" placeholder="부족한 물품 입력..." />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">3. 증빙 사진 촬영</h2>
+              {isUploading && <Loader2 className="w-5 h-5 text-gray-600 animate-spin"/>}
+            </div>
+            <div className="grid grid-cols-3 gap-2.5 pt-1">
+              {Object.keys(photoNames).map(p=>(
+                <label key={p} className={`aspect-square rounded-xl border border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden relative transition-all duration-200 ${formData.photos[p] ? 'bg-gray-50 border-gray-400' : 'bg-gray-50 border-gray-300 hover:bg-gray-100'}`}>
+                  <input type="file" accept="image/*" className="hidden" onChange={e=>handlePhotoChange(p, e)} disabled={isUploading} />
+                  {formData.photos[p] ? <img src={formData.photos[p]} className="w-full h-full object-cover" /> : <div className="flex flex-col items-center opacity-50"><Camera size={24} className="text-gray-700 mb-1"/><span className="text-[10px] text-gray-700 font-semibold">{photoNames[p]}</span></div>}
+                  {formData.photos[p] && <div className="absolute inset-0 bg-black/5 flex items-center justify-center"><CheckCircle2 className="text-white drop-shadow-md" size={32}/></div>}
+                </label>
+              ))}
+            </div>
+          </section>
+
+          <section className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">4. 대기 손님 여부</h2>
+            <div className="flex gap-2 pt-1">
+              <button onClick={()=>handleWaitingToggle(true)} className={`flex-1 py-4 rounded-xl font-semibold text-sm border transition-all ${formData.waiting.hadWaiting===true?'bg-gray-900 border-gray-900 text-white shadow-sm':'bg-gray-50 border-gray-200 text-gray-500'}`}>손님 있었음</button>
+              <button onClick={()=>handleWaitingToggle(false)} className={`flex-1 py-4 rounded-xl font-semibold text-sm border transition-all ${formData.waiting.hadWaiting===false?'bg-gray-900 border-gray-900 text-white shadow-sm':'bg-gray-50 border-gray-200 text-gray-500'}`}>없었음</button>
+            </div>
+          </section>
+
+          <section className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+            <h2 className="text-sm font-bold text-gray-800 border-l-4 border-gray-800 pl-2">5. 개선이 필요한 부분</h2>
+            <textarea rows="3" value={formData.notes} onChange={e=>setFormData({...formData, notes:e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 border border-gray-200 outline-none text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 ring-gray-400" placeholder="사장님께 전달할 내용을 입력해 주세요..." />
+          </section>
+
+          <div className="pt-6 pb-8">
+            <button onClick={submitReport} disabled={isSubmitting || isUploading} className={`w-full py-5 rounded-2xl font-bold text-lg text-white shadow-sm transition-all transform active:scale-95 flex items-center justify-center gap-2 ${isSubmitting||isUploading?'bg-gray-400 border-gray-400':'bg-gray-900 hover:bg-gray-800'}`}>
+              {isSubmitting ? <Loader2 className="animate-spin" size={24}/> : null} {isSubmitting ? '전송 중...' : '보고서 제출 완료'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -2283,7 +2400,7 @@ export default function App() {
               <p className="font-black text-gray-900 mb-12 text-3xl tracking-tight leading-tight font-black">정말 이 항목을<br/>영구 삭제하시겠습니까?</p>
               <div className="flex gap-4 font-black font-black font-black">
                  <button onClick={()=>{setDeleteConfirmId(null); setDeleteTargetType(null);}} className="flex-1 py-6 bg-gray-100 rounded-[28px] font-black text-xl text-gray-500 hover:bg-gray-200 transition-colors font-black font-black">취소</button>
-                 <button onClick={executeDelete} className="flex-1 py-6 bg-red-600 text-white rounded-[28px] font-black shadow-2xl active:scale-95 transition-all font-black font-black font-black font-black font-black">삭제 승인</button>
+                 <button onClick={executeDelete} className="flex-1 py-6 bg-red-600 rounded-[28px] font-black text-xl text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-500/50">삭제 승인</button>
               </div>
            </div>
         </div>
