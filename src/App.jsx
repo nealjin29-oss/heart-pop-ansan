@@ -23,7 +23,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'heart-pop-app-prod';
+const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'heart-pop-ansan-prod';
 const appId = rawAppId.replace(/\//g, '_');
 
 // =====================================================================
