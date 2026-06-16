@@ -2148,7 +2148,7 @@ export default function App() {
         <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-40 font-sans">
           <header className="bg-white p-5 border-b border-gray-200 flex justify-between items-center sticky top-0 z-20 shadow-sm">
             <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"><Menu size={20}/></button>
-            <h1 className="font-bold text-gray-900 text-lg">하트뻥튀기 매뉴얼</h1>
+            <h1 className="font-bold text-gray-900 text-lg">안산휴게소 하트뻥 매뉴얼</h1>
             <div className="w-8"></div>
           </header>
           <div className="p-4 space-y-4">
@@ -2193,7 +2193,7 @@ export default function App() {
       <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-20 font-sans">
         <header className="bg-white p-5 border-b border-gray-200 sticky top-0 z-20 flex justify-between items-center shadow-sm">
           <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100"><Menu size={20}/></button>
-          <h1 className="font-bold text-gray-900 text-lg flex items-center gap-1 tracking-tight">❤️ 하트뻥튀기</h1>
+          <h1 className="font-bold text-gray-900 text-lg flex items-center gap-1 tracking-tight">❤️ 안산휴게소 하트뻥</h1>
           <div className="w-8"></div>
         </header>
 
